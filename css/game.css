@@ -1,0 +1,36 @@
+html, body {
+  margin: 0;
+  height: 100%;
+  background: #07070c;
+  color: #9a9ab0;
+  font-family: "Press Start 2P", monospace;
+}
+
+#stage {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+#game {
+  /* Logical canvas is 384x216; the element scales to fit while keeping 16:9. */
+  width: min(100vw - 24px, calc((100vh - 60px) * 16 / 9));
+  aspect-ratio: 16 / 9;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  background: #000;
+  outline: none;
+}
+
+#hint {
+  margin: 0;
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  opacity: 0.6;
+  text-align: center;
+}

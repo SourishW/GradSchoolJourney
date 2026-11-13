@@ -1,0 +1,10 @@
+{
+  "name": "amara-grad-school-game",
+  "private": true,
+  "type": "module",
+  "description": "A browser-based branching story about healthy habits in graduate school.",
+  "scripts": {
+    "check": "node tools/check_story.js",
+    "serve": "python3 -m http.server 8080"
+  }
+}
