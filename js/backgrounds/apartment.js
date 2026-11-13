@@ -3,11 +3,11 @@
 
 export function drawApartment(ctx, variant, timeMs) {
   const night = variant !== 'day';
-  ctx.fillStyle = night ? '#3a2f3a' : '#6b5660';
+  ctx.fillStyle = night ? '#5a4660' : '#f7e6c4';
   ctx.fillRect(0, 0, 384, 118);
-  ctx.fillStyle = night ? '#4a3a30' : '#7a5c42';
+  ctx.fillStyle = night ? '#6a4a36' : '#c0885a';
   ctx.fillRect(0, 118, 384, 98);
-  ctx.fillStyle = night ? '#5a4838' : '#8e6b4e';
+  ctx.fillStyle = night ? '#7a5a44' : '#d49a6a';
   for (let x = 0; x < 384; x += 32) ctx.fillRect(x, 118, 1, 98);
 
   // Window.
@@ -40,9 +40,9 @@ export function drawApartment(ctx, variant, timeMs) {
   // Bed.
   ctx.fillStyle = '#5a3a2a';
   ctx.fillRect(14, 96, 104, 50);
-  ctx.fillStyle = '#7b4fa0';
+  ctx.fillStyle = '#8e5fc0';
   ctx.fillRect(18, 104, 96, 32);
-  ctx.fillStyle = '#9b6fc0';
+  ctx.fillStyle = '#b48ae0';
   ctx.fillRect(18, 104, 96, 6);
   ctx.fillStyle = '#f4f0e8';
   ctx.fillRect(22, 98, 26, 10);

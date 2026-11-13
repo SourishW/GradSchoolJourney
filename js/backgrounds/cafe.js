@@ -2,17 +2,17 @@
 
 export function drawCafe(ctx) {
   // Brick wall.
-  ctx.fillStyle = '#6b3a2a';
+  ctx.fillStyle = '#9c4a36';
   ctx.fillRect(0, 0, 384, 120);
-  ctx.fillStyle = '#7d4634';
+  ctx.fillStyle = '#b85a40';
   for (let row = 0; row < 15; row++) {
     const offset = row % 2 === 0 ? 0 : 12;
     for (let x = -12; x < 384; x += 24) ctx.fillRect(x + offset, row * 8, 22, 6);
   }
   // Floor.
-  ctx.fillStyle = '#3f2a1e';
+  ctx.fillStyle = '#6e4a34';
   ctx.fillRect(0, 120, 384, 96);
-  ctx.fillStyle = '#4e3626';
+  ctx.fillStyle = '#80583e';
   for (let x = 0; x < 384; x += 24) ctx.fillRect(x, 120, 12, 96);
 
   // Hanging lamps with glow.

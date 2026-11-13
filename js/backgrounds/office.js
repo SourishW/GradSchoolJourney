@@ -3,16 +3,16 @@
 const BOOK_COLORS = ['#c0392b', '#2f9e63', '#3b5bdb', '#e9b949', '#8e44ad', '#d35400', '#16a085'];
 
 export function drawOffice(ctx) {
-  ctx.fillStyle = '#3b3328';
+  ctx.fillStyle = '#cfe0cc';
   ctx.fillRect(0, 0, 384, 120);
-  ctx.fillStyle = '#5a3f28';
+  ctx.fillStyle = '#9a6a44';
   ctx.fillRect(0, 120, 384, 96);
-  ctx.fillStyle = '#6b4a30';
+  ctx.fillStyle = '#ad7a50';
   for (let x = 0; x < 384; x += 28) ctx.fillRect(x, 120, 14, 96);
 
   // Bookshelves on the left and right.
   for (const shelfX of [16, 300]) {
-    ctx.fillStyle = '#2a1e14';
+    ctx.fillStyle = '#5a3a24';
     ctx.fillRect(shelfX, 14, 70, 104);
     for (let shelf = 0; shelf < 4; shelf++) {
       const y = 20 + shelf * 25;

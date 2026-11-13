@@ -3,21 +3,21 @@
 
 export function drawStage(ctx, variant, timeMs) {
   const concert = variant === 'concert';
-  ctx.fillStyle = concert ? '#120a14' : '#2a1e2a';
+  ctx.fillStyle = concert ? '#241236' : '#3e2a48';
   ctx.fillRect(0, 0, 384, 120);
   // Wooden stage floor.
-  ctx.fillStyle = '#6b4a2a';
+  ctx.fillStyle = '#9a6a3a';
   ctx.fillRect(0, 120, 384, 96);
-  ctx.fillStyle = '#7d5a36';
+  ctx.fillStyle = '#b07e48';
   for (let x = 0; x < 384; x += 20) ctx.fillRect(x, 120, 10, 96);
   ctx.fillStyle = '#4a3220';
   ctx.fillRect(0, 120, 384, 2);
 
   // Curtains.
-  ctx.fillStyle = concert ? '#8e1b2a' : '#5a2030';
+  ctx.fillStyle = concert ? '#c0263a' : '#8e2a3e';
   ctx.fillRect(0, 0, 44, 125);
   ctx.fillRect(340, 0, 44, 125);
-  ctx.fillStyle = concert ? '#a62a3a' : '#6a2a3a';
+  ctx.fillStyle = concert ? '#d83a4e' : '#a43a4e';
   for (let x = 4; x < 44; x += 10) { ctx.fillRect(x, 0, 3, 125); ctx.fillRect(340 + x, 0, 3, 125); }
 
   if (concert) {

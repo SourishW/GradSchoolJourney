@@ -3,11 +3,11 @@
 const CONFETTI_COLORS = ['#f2c94c', '#ff5c5c', '#7fd1a8', '#8fb8ff', '#c9a7ff'];
 
 export function drawGraduationHall(ctx, variant, timeMs) {
-  ctx.fillStyle = '#1e2240';
+  ctx.fillStyle = '#3250a8';
   ctx.fillRect(0, 0, 384, 120);
-  ctx.fillStyle = '#5a3f28';
+  ctx.fillStyle = '#a06a3e';
   ctx.fillRect(0, 120, 384, 96);
-  ctx.fillStyle = '#6b4a30';
+  ctx.fillStyle = '#b87c4c';
   for (let x = 0; x < 384; x += 24) ctx.fillRect(x, 120, 12, 96);
 
   // Banner.

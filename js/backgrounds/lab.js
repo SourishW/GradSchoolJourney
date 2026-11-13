@@ -6,20 +6,25 @@
 export function drawLab(ctx, variant = '', timeMs) {
   const night = variant.includes('night');
   const deadline = variant.includes('deadline');
-  ctx.fillStyle = night ? '#1c2030' : '#2b3140';
+  ctx.fillStyle = night ? '#8c6658' : '#f6c9a6';          // peach wall
   ctx.fillRect(0, 0, 384, 120);
-  ctx.fillStyle = night ? '#2a2e3c' : '#3a3f4f';
+  ctx.fillStyle = night ? '#6e4e44' : '#e8a985';          // baseboard
+  ctx.fillRect(0, 114, 384, 6);
+  ctx.fillStyle = night ? '#5a5e6a' : '#9a9ea8';          // grey floor
   ctx.fillRect(0, 120, 384, 96);
-  ctx.fillStyle = night ? '#343848' : '#474c5e';
+  ctx.fillStyle = night ? '#4e525e' : '#8a8e98';          // tile lines
+  for (let x = 0; x < 384; x += 32) ctx.fillRect(x, 120, 1, 96);
+  for (let y = 136; y < 216; y += 24) ctx.fillRect(0, y, 384, 1);
+  ctx.fillStyle = night ? '#6a6e7a' : '#b4b8c2';
   ctx.fillRect(0, 120, 384, 2);
 
   // Ceiling light strips.
-  ctx.fillStyle = night ? '#404860' : '#e8eefc';
+  ctx.fillStyle = night ? '#7a6a70' : '#fff6e8';
   ctx.fillRect(40, 6, 90, 3);
   ctx.fillRect(250, 6, 90, 3);
 
   // Whiteboard: aluminium frame, clean surface, tray with markers + eraser.
-  ctx.fillStyle = '#b8bcc8';
+  ctx.fillStyle = '#6c7280';
   ctx.fillRect(20, 26, 114, 62);
   ctx.fillStyle = night ? '#dfe3ea' : '#f4f6f9';
   ctx.fillRect(22, 28, 110, 56);
@@ -54,9 +59,9 @@ export function drawLab(ctx, variant = '', timeMs) {
 
   // Desks and monitors.
   for (const deskX of [150, 220, 290]) {
-    ctx.fillStyle = '#5b4636';
+    ctx.fillStyle = '#d9a066';
     ctx.fillRect(deskX, 96, 56, 6);
-    ctx.fillStyle = '#4a3729';
+    ctx.fillStyle = '#8b5a2b';
     ctx.fillRect(deskX + 4, 102, 4, 20);
     ctx.fillRect(deskX + 48, 102, 4, 20);
     ctx.fillStyle = '#15141c';
