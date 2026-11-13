@@ -1,4 +1,4 @@
-# Amara: A Grad School Story
+# A Grad School Journey
 
 A browser game about the habits that get you through a PhD: planning for
 failed experiments, sleeping before deadlines, telling the truth when it

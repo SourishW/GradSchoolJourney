@@ -46,7 +46,7 @@ export function drawTitleScreen(ctx, width, height, timeMs, endingsSeen, endingC
   ctx.fillText('AMARA', width / 2, 34);
   ctx.font = '12px "Press Start 2P", monospace';
   ctx.fillStyle = '#d0d0e8';
-  ctx.fillText('A Grad School Story', width / 2, 76);
+  ctx.fillText('A Grad School Journey', width / 2, 76);
 
   ctx.font = '24px "VT323", "Courier New", monospace';
   if (Math.floor(timeMs / 600) % 2 === 0) {
