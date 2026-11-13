@@ -10,7 +10,7 @@ export const CAST = {
   amara: {
     name: 'Amara', color: '#c9a7ff', pitch: 520,
     skin: '#f3cfa9', skinShade: '#d9a97f', hair: '#6b4226', hairHighlight: '#9a6a3c',
-    top: '#bf5700', topDetail: '#9a4600', bottom: '#2f4b7c', shoes: '#1d1d24', // burnt orange hoodie
+    top: '#f4a261', topDetail: '#d9843f', bottom: '#2f4b7c', shoes: '#1d1d24', // light orange hoodie
     hairStyle: 'down', topStyle: 'hoodie',
   },
   daniel: {
