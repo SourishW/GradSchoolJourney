@@ -75,15 +75,23 @@ function drawChoices(ctx, player) {
   });
 }
 
-const LESSON_BOX = { x: 428, y: 14, w: 326 };
+const LESSON_BOX = { x: 400, y: 14, w: 354 };
+const LESSON_PADDING = 14;
+const TITLE_LINE_HEIGHT = 14;
 
+// Both the title and the body are word-wrapped to the card's inner width,
+// and the card grows to fit them, so nothing can run past the border.
 export function drawLessonCard(ctx, player) {
   const { lesson } = player;
+  const innerWidth = LESSON_BOX.w - LESSON_PADDING * 2;
   ctx.save();
   ctx.textBaseline = 'top';
+  ctx.font = NAME_FONT;
+  const titleLines = wrapText(ctx, `LESSON ${player.state.lessons.length}: ${lesson.title.toUpperCase()}`, innerWidth);
   ctx.font = BODY_FONT;
-  const lines = wrapText(ctx, lesson.text, LESSON_BOX.w - 28);
-  const height = 14 + 16 + 8 + lines.length * LINE_HEIGHT + 14;
+  const bodyLines = wrapText(ctx, lesson.text, innerWidth);
+  const titleHeight = titleLines.length * TITLE_LINE_HEIGHT;
+  const height = LESSON_PADDING + titleHeight + 8 + bodyLines.length * LINE_HEIGHT + LESSON_PADDING;
 
   ctx.fillStyle = 'rgba(8, 8, 16, 0.92)';
   ctx.fillRect(LESSON_BOX.x, LESSON_BOX.y, LESSON_BOX.w, height);
@@ -93,10 +101,11 @@ export function drawLessonCard(ctx, player) {
 
   ctx.font = NAME_FONT;
   ctx.fillStyle = '#f2c94c';
-  ctx.fillText(`LESSON ${player.state.lessons.length}: ${lesson.title.toUpperCase()}`, LESSON_BOX.x + 14, LESSON_BOX.y + 14);
+  titleLines.forEach((line, index) => ctx.fillText(line, LESSON_BOX.x + LESSON_PADDING, LESSON_BOX.y + LESSON_PADDING + index * TITLE_LINE_HEIGHT));
   ctx.font = BODY_FONT;
   ctx.fillStyle = '#f8f8ff';
-  lines.forEach((line, index) => ctx.fillText(line, LESSON_BOX.x + 14, LESSON_BOX.y + 38 + index * LINE_HEIGHT));
+  const bodyTop = LESSON_BOX.y + LESSON_PADDING + titleHeight + 8;
+  bodyLines.forEach((line, index) => ctx.fillText(line, LESSON_BOX.x + LESSON_PADDING, bodyTop + index * LINE_HEIGHT));
 
   if (Math.floor(performance.now() / 400) % 2 === 0) {
     ctx.fillStyle = '#f2c94c';

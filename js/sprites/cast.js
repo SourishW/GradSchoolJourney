@@ -4,14 +4,14 @@
 import { humanoid, POSES } from './humanoid.js';
 import { rasterize } from './pixel_sprite.js';
 
-const GOWN = { top: '#1c1c28', topDetail: '#3a3a52', bottom: '#1c1c28', topStyle: 'hoodie', print: null };
+const GOWN = { top: '#1c1c28', topDetail: '#3a3a52', bottom: '#1c1c28', topStyle: 'hoodie' };
 
 export const CAST = {
   amara: {
     name: 'Amara', color: '#c9a7ff', pitch: 520,
     skin: '#f3cfa9', skinShade: '#d9a97f', hair: '#6b4226', hairHighlight: '#9a6a3c',
-    top: '#bf5700', topDetail: '#9a4600', bottom: '#2f4b7c', shoes: '#1d1d24', // burnt orange UT hoodie
-    hairStyle: 'down', topStyle: 'hoodie', print: 'UT',
+    top: '#bf5700', topDetail: '#9a4600', bottom: '#2f4b7c', shoes: '#1d1d24', // burnt orange hoodie
+    hairStyle: 'down', topStyle: 'hoodie',
   },
   daniel: {
     name: 'Daniel', color: '#7fd1a8', pitch: 360,
