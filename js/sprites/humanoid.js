@@ -6,7 +6,7 @@
 //   k outline   s skin   S skin shade   A hair   h hair highlight
 //   T top       D top detail   U top shade   J bottom   V bottom shade  b shoes
 //   e eye white p pupil  w eye glint  m mouth   t tear   r blush
-//   f glasses frame      G cap     y tassel
+//   f glasses frame      G cap     y tassel   W chest lettering
 
 import { mix, shade } from './color.js';
 
@@ -23,6 +23,7 @@ const SHARED_COLORS = {
   f: '#1d1d26',
   G: '#1b1b26',
   y: '#f2c94c',
+  W: '#f6f1e6',
 };
 
 // Face landmarks (inclusive x ranges).
@@ -99,6 +100,7 @@ function paintBody({ px, fill }, spec, disheveled) {
   for (let y = 37; y <= 40; y++) { px(8, y, 'k'); px(23, y, 'k'); }
 
   paintTopDetail({ px, fill }, spec.topStyle ?? 'tee', disheveled);
+  if (spec.print === 'UT') paintUtLetters({ px, fill });
 
   // Hips and legs.
   fill(9, 37, 22, 39, 'J');
@@ -141,6 +143,12 @@ function paintTopDetail({ px, fill }, style, disheveled) {
       fill(12, 24, 19, 27, 'D');                 // print
       break;
   }
+}
+
+// Block capitals "UT" on the chest, below the drawstrings, above the pocket.
+function paintUtLetters({ px, fill }) {
+  fill(11, 25, 11, 28, 'W'); fill(13, 25, 13, 28, 'W'); fill(11, 29, 13, 29, 'W'); // U
+  fill(18, 25, 20, 25, 'W'); fill(19, 26, 19, 29, 'W');                            // T
 }
 
 function paintHead({ px, fill }) {
