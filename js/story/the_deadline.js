@@ -19,7 +19,7 @@ export const theDeadline = {
   deadline_eve: {
     bg: 'apartment',
     lesson: 'prioritize_health',
-    bgVariant: bedroom({ dusty: true }),
+    bgVariant: bedroom({ clutter: 1, dusty: true }),
     cast: [{ who: 'amara', x: 384 }],
     lines: [
       { who: 'narrator', text: 'Ten days to the submission. The results are close. Not done. Close.' },
@@ -95,7 +95,7 @@ export const theDeadline = {
   agent_deletes: {
     bg: 'apartment',
     lesson: 'integrity',
-    bgVariant: bedroom({ dusty: true }),
+    bgVariant: bedroom({ clutter: 1, dusty: true }),
     cast: [{ who: 'amara', x: 384, pose: 'tired' }],
     lines: [
       { who: 'narrator', text: 'The agent runs for six hours. Nobody watches it. That was the point.' },

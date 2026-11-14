@@ -20,7 +20,6 @@ import { syllableOnsets } from './syllables.js';
 
 const CHARS_PER_SECOND = 45;
 const TOAST_LIFETIME_MS = 1800;
-const ENDINGS_STORAGE_KEY = 'amara-endings-seen';
 
 export class ScenePlayer {
   constructor(story, audio) {
@@ -69,7 +68,6 @@ export class ScenePlayer {
     if (type === 'ending') {
       this.mode = 'ending';
       this.ending = computeEnding(this.state.flags);
-      this.rememberEnding(this.ending.id);
       this.audio.chord();
       return;
     }
@@ -200,25 +198,5 @@ export class ScenePlayer {
       (rect) => point.x >= rect.x && point.x <= rect.x + rect.w && point.y >= rect.y && point.y <= rect.y + rect.h,
     );
     return index;
-  }
-
-  // --- endings tracker ---------------------------------------------------
-
-  rememberEnding(id) {
-    try {
-      const seen = new Set(JSON.parse(localStorage.getItem(ENDINGS_STORAGE_KEY) ?? '[]'));
-      seen.add(id);
-      localStorage.setItem(ENDINGS_STORAGE_KEY, JSON.stringify([...seen]));
-    } catch {
-      // Private mode or blocked storage: the tracker is a convenience only.
-    }
-  }
-
-  endingsSeen() {
-    try {
-      return JSON.parse(localStorage.getItem(ENDINGS_STORAGE_KEY) ?? '[]');
-    } catch {
-      return [];
-    }
   }
 }

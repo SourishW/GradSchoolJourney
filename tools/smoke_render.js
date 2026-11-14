@@ -20,12 +20,10 @@ globalThis.document = {
   getElementById: () => ({ textContent: '' }),
 };
 globalThis.window = { addEventListener: () => {} };
-globalThis.localStorage = { getItem: () => null, setItem: () => {} };
 globalThis.performance = { now: () => Date.now() };
 globalThis.setTimeout = (fn) => fn();
 
 const { STORY } = await import('../js/story/story_graph.js');
-const { ENDINGS } = await import('../js/story/endings.js');
 const { ScenePlayer } = await import('../js/engine/scene_player.js');
 const { BACKGROUNDS } = await import('../js/backgrounds/index.js');
 const { drawCharacters } = await import('../js/render/characters.js');
@@ -38,7 +36,7 @@ const audio = { syllable() {}, tick() {}, confirm() {}, chord() {} };
 const ctx = stubContext();
 
 function renderFrame(player, now) {
-  if (player.mode === 'title') return drawTitleScreen(ctx, 384, 216, now, 0, ENDINGS.length, now);
+  if (player.mode === 'title') return drawTitleScreen(ctx, 384, 216, now, now);
   if (player.mode === 'card') return drawCard(ctx, player, 384, 216);
   BACKGROUNDS[player.scene.bg](ctx, player.bgVariant, now);
   drawCharacters(ctx, player, 384, now);
@@ -49,8 +47,8 @@ function renderFrame(player, now) {
 }
 
 // Every state the bedroom can be in, whether or not a walk reaches it.
-for (const light of ['night', 'day']) for (const care of ['tidy', 'lived', 'messy']) for (const dusty of [false, true]) for (const dark of [false, true]) {
-  BACKGROUNDS.apartment(ctx, { light, care, dusty, dark }, 1234);
+for (const light of ['night', 'day']) for (const care of ['tidy', 'lived', 'messy']) for (const clutter of [0, 1, 2]) for (const dusty of [false, true]) for (const dark of [false, true]) {
+  BACKGROUNDS.apartment(ctx, { light, care, clutter, dusty, dark }, 1234);
 }
 
 let seed = 777;

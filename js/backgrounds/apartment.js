@@ -11,6 +11,10 @@
 //          'messy'  blanket dragged onto the floor, clothes and manga on the
 //                   floor, takeout on the desk, a poster corner come untaped,
 //                   string lights off
+//   clutter  0 | 1 | 2: work piling up. 1: sticky notes and a deadline
+//          calendar by the desk, pages and a coffee cup on it, a bin filling
+//          with crumpled drafts, a few pages on the floor. 2: twice the notes, the bin overflowing,
+//          pages all over the floor, energy-drink cans
 //   dusty  dust on the violin case and every flat surface, a cobweb
 //   dark   lamp off and laptop shut: nobody is really living here
 // A scene does not pick these itself: it writes `bgVariant: bedroom()` and the
@@ -21,23 +25,29 @@
 // The HUD covers the top-left corner and the dialogue box everything below
 // y=162.
 
-import { GLAD_HAPPINESS, LOW_HAPPINESS, HIGH_STRESS } from '../engine/stats.js';
+import { GLAD_HAPPINESS, LOW_HAPPINESS, TENSE_STRESS, HIGH_STRESS } from '../engine/stats.js';
 
 const FLOOR_TOP = 118;
 
 const CARE = ['tidy', 'lived', 'messy'];   // in order of neglect
 
-// The `bgVariant` for a bedroom scene. Mess follows Happiness, with the same
-// thresholds as Amara's face; dust follows Stress. `atLeast` is the least
-// neglect the script calls for ({ care, dusty, dark }); the bars can make the
-// room worse than that but not better.
+// The `bgVariant` for a bedroom scene. Both bars show in the room, and the
+// worse one wins:
+//   Happiness  the bed and floor (`care`), with the same thresholds as her face
+//   Stress     work clutter around the desk (`clutter`); from TENSE_STRESS it
+//              also stops her making the bed, and at HIGH_STRESS the whole
+//              room is a mess and gathers dust
+// `atLeast` is the least neglect the script calls for ({ care, clutter, dusty,
+// dark }); the bars can make the room worse than that but not better.
 export function bedroom(atLeast = {}) {
   return ({ stats }) => {
-    const mood = stats.happiness >= GLAD_HAPPINESS ? 'tidy' : stats.happiness <= LOW_HAPPINESS ? 'messy' : 'lived';
+    const strain = stats.stress >= HIGH_STRESS ? 2 : stats.stress >= TENSE_STRESS ? 1 : 0;
+    const mood = stats.happiness >= GLAD_HAPPINESS ? 0 : stats.happiness <= LOW_HAPPINESS ? 2 : 1;
     return {
       light: atLeast.light ?? 'night',
-      care: CARE[Math.max(CARE.indexOf(mood), CARE.indexOf(atLeast.care ?? 'tidy'))],
-      dusty: Boolean(atLeast.dusty) || stats.stress >= HIGH_STRESS,
+      care: CARE[Math.max(mood, strain, CARE.indexOf(atLeast.care ?? 'tidy'))],
+      clutter: Math.max(strain, atLeast.clutter ?? 0),
+      dusty: Boolean(atLeast.dusty) || strain === 2,
       dark: Boolean(atLeast.dark),
     };
   };
@@ -176,7 +186,7 @@ const ROBOT_FIGURE = [  // and a toy robot beside it
 // --- the room ---------------------------------------------------------------------
 
 export function drawApartment(ctx, room, timeMs) {
-  const { light = 'night', care = 'tidy', dusty = false, dark = false } = room ?? {};
+  const { light = 'night', care = 'tidy', clutter = 0, dusty = false, dark = false } = room ?? {};
   const night = light !== 'day';
   const messy = care === 'messy';
   const wall = night ? '#5a4660' : '#f7e6c4';
@@ -199,6 +209,7 @@ export function drawApartment(ctx, room, timeMs) {
   paintDesk(ctx, rect, night, care, dark);
   paintCorner(ctx, rect);
   paintFloorThings(ctx, rect, messy);
+  if (clutter) paintWorkClutter(ctx, rect, clutter);
   if (dark) rect('rgba(12, 8, 34, 0.24)', 0, 0, 384, 216);                   // only the window lights the room
   if (dusty) paintDust(ctx, rect, timeMs);
 }
@@ -585,6 +596,59 @@ function paintFloorThings(ctx, rect, messy) {
   rect('#f7f3ea', 284, 151, 8, 4); rect('#d6336c', 286, 151, 2, 4); rect('#33241a', 291, 152, 1, 2);   // an empty pot
   ctx.fillStyle = '#f7f3ea';                                                 // tissues
   for (const [x, y] of [[126, 157], [146, 147], [234, 158], [276, 148], [44, 150], [312, 156]]) { ctx.fillRect(x, y, 3, 2); ctx.fillRect(x + 1, y - 1, 2, 1); }
+}
+
+// Work taking over the room. Level 1 stays around the desk; level 2 spreads
+// across the floor.
+function paintWorkClutter(ctx, rect, level) {
+  const PAPER = '#f7f3ea', INK = '#8a8494';
+  const heavy = level >= 2;
+
+  // A calendar counting down to the deadline, and sticky notes around it.
+  rect(PAPER, 219, 28, 20, 20); rect('#d6336c', 219, 28, 20, 4); rect('#2a2230', 228, 26, 2, 3);
+  for (let day = 0; day < 15; day++) {
+    const x = 221 + (day % 5) * 4, y = 34 + Math.floor(day / 5) * 4;
+    rect(day < (heavy ? 13 : 8) ? '#d6336c' : '#c8c2b4', x, y, 2, 2);        // days crossed off
+  }
+  rect('#2c5fd6', 235, 41, 4, 4); rect(PAPER, 236, 42, 2, 2);                // the day, circled
+  const NOTES = [[219, 52, '#f2c94c'], [226, 53, '#ff8fb8'], [233, 51, '#8fd3ff'], [220, 60, '#b9f18c'],
+    [228, 61, '#f2c94c'], [234, 59, '#ff8fb8'], [219, 68, '#8fd3ff'], [226, 69, '#f2c94c'], [233, 67, '#b9f18c'],
+    [221, 76, '#ff8fb8'], [229, 77, '#8fd3ff'], [235, 75, '#f2c94c']];
+  for (const [x, y, color] of NOTES.slice(0, heavy ? 12 : 7)) {
+    rect(color, x, y, 6, 6); rect('rgba(0, 0, 0, 0.35)', x + 1, y + 2, 4, 1); rect('rgba(0, 0, 0, 0.35)', x + 1, y + 4, 3, 1);
+    rect('rgba(0, 0, 0, 0.2)', x, y + 6, 6, 1);
+  }
+  if (heavy) for (const [x, y, color] of [[262, 30, '#f2c94c'], [300, 31, '#ff8fb8'], [312, 60, '#f2c94c'], [258, 58, '#b9f18c']]) {
+    rect(color, x, y, 6, 6); rect('rgba(0, 0, 0, 0.35)', x + 1, y + 2, 4, 1);   // and on the window glass
+  }
+
+  // On the desk: a coffee cup on the manga, pages sliding off the edge.
+  const page = (x, y, w, h) => { rect(PAPER, x, y, w, h); for (let line = 1; line < h - 1; line += 2) rect(INK, x + 1, y + line, w - 2 - (line % 3), 1); };
+  rect(PAPER, 311, 84, 6, 7); rect('#8a5a30', 311, 86, 6, 3); rect('#3a2a20', 310, 83, 8, 1);
+  rect('rgba(255, 255, 255, 0.45)', 313, 79, 1, 3); rect('rgba(255, 255, 255, 0.45)', 315, 77, 1, 3);   // steam
+  page(246, 100, 9, 9); page(290, 100, 10, 8);
+  if (heavy) {
+    page(258, 101, 8, 10); page(276, 100, 9, 6);
+    for (const [x, y] of [[266, 80], [342, 94]]) { rect('#2f9e63', x, y, 3, 6); rect('#c8ccd8', x, y, 3, 1); rect('#f2c94c', x, y + 3, 3, 1); }   // cans
+    rect(PAPER, 234, 93, 5, 7); rect('#8a5a30', 234, 95, 5, 2);              // yesterday's cup
+  }
+
+  // The bin by the desk, and the drafts that missed it.
+  rect('#4d4d5e', 222, 135, 11, 11); rect('#3a3a48', 222, 135, 11, 1);
+  for (let x = 224; x < 233; x += 3) rect('#3a3a48', x, 136, 1, 10);
+  const ball = (x, y) => { rect('#e6dfd0', x, y, 4, 3); rect(PAPER, x + 1, y - 1, 2, 1); rect('#b9b3a6', x + 1, y + 1, 2, 1); rect('rgba(0, 0, 0, 0.3)', x, y + 3, 4, 1); };
+  ball(223, 132); ball(228, 131);
+  const sheet = (x, y, w) => { rect('rgba(0, 0, 0, 0.3)', x, y + 5, w, 1); page(x, y, w, 5); };
+  for (const [x, y] of [[236, 148], [215, 150], [241, 155], [250, 147], [208, 157]]) ball(x, y);
+  sheet(254, 152, 10); sheet(226, 156, 9); sheet(276, 147, 9);
+  if (!heavy) return;
+  ball(225, 128); ball(230, 127); ball(220, 130);
+  for (const [x, y] of [[206, 147], [244, 151], [270, 156], [198, 152], [290, 148], [180, 150], [330, 149]]) ball(x, y);
+  for (const [x, y, w] of [[160, 152, 10], [186, 155, 9], [296, 156, 9], [316, 147, 10], [340, 154, 9], [140, 147, 9], [108, 155, 10]]) sheet(x, y, w);   // pages across the floor
+  for (const [x, y] of [[250, 141], [346, 150]]) {                           // cans, one standing, one on its side
+    rect('#2f9e63', x, y, 3, 6); rect('#c8ccd8', x, y, 3, 1); rect('#f2c94c', x, y + 3, 3, 1);
+  }
+  rect('#2f9e63', 306, 152, 6, 3); rect('#c8ccd8', 306, 152, 1, 3); rect('#f2c94c', 309, 152, 1, 3);
 }
 
 // Nobody has cleaned: a film on every flat surface, a cobweb in the corner of

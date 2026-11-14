@@ -1,7 +1,6 @@
 // Boot: load the fonts, wire input, run the render loop.
 
 import { STORY } from './story/story_graph.js';
-import { ENDINGS } from './story/endings.js';
 import { ScenePlayer } from './engine/scene_player.js';
 import { GameAudio } from './engine/audio.js';
 import { attachInput } from './engine/input.js';
@@ -79,7 +78,7 @@ function render(now) {
   const idleClock = reducedMotion?.matches ? null : now;
 
   if (player.mode === 'title') {
-    drawTitleScreen(ctx, LOGICAL_WIDTH, LOGICAL_HEIGHT, now, player.endingsSeen().length, ENDINGS.length, idleClock);
+    drawTitleScreen(ctx, LOGICAL_WIDTH, LOGICAL_HEIGHT, now, idleClock);
     return;
   }
   if (player.mode === 'card') {

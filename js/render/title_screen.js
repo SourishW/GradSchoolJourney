@@ -13,7 +13,7 @@ const STARS = Array.from({ length: 120 }, (_, index) => ({
 }));
 
 // `idleClock` drives Amara's idle animation; null draws her at rest.
-export function drawTitleScreen(ctx, width, height, timeMs, endingsSeen, endingCount, idleClock = null) {
+export function drawTitleScreen(ctx, width, height, timeMs, idleClock = null) {
   const sky = ctx.createLinearGradient(0, 0, 0, height);
   sky.addColorStop(0, '#060616');
   sky.addColorStop(1, '#1b1b40');
@@ -56,8 +56,5 @@ export function drawTitleScreen(ctx, width, height, timeMs, endingsSeen, endingC
     ctx.fillStyle = '#f8f8ff';
     ctx.fillText('press Enter or click to begin', width / 2, FLOOR_Y + 36);
   }
-  ctx.font = '18px "VT323", "Courier New", monospace';
-  ctx.fillStyle = '#8888a8';
-  ctx.fillText(`endings found: ${endingsSeen}/${endingCount}`, width / 2, height - 36);
   ctx.textAlign = 'left';
 }

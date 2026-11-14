@@ -1,7 +1,6 @@
-// The graduation ending card: ending title, a few lines, and the tracker.
+// The graduation ending card: ending title, a few lines, and the lesson count.
 
 import { wrapText } from '../engine/text_layout.js';
-import { ENDINGS } from '../story/endings.js';
 import { LESSON_COUNT } from '../story/lessons.js';
 
 export function drawEndingScreen(ctx, player, width, height) {
@@ -29,7 +28,7 @@ export function drawEndingScreen(ctx, player, width, height) {
 
   ctx.font = '18px "VT323", "Courier New", monospace';
   ctx.fillStyle = '#8888a8';
-  ctx.fillText(`lessons learned: ${player.state.lessons.length}/${LESSON_COUNT}   ·   endings found: ${player.endingsSeen().length}/${ENDINGS.length}`, width / 2, height - 64);
+  ctx.fillText(`lessons learned: ${player.state.lessons.length}/${LESSON_COUNT}`, width / 2, height - 64);
   if (Math.floor(performance.now() / 600) % 2 === 0) {
     ctx.fillStyle = '#d0d0e8';
     ctx.fillText('press Enter to play again and find another path', width / 2, height - 38);

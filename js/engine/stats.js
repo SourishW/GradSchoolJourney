@@ -23,7 +23,8 @@ export const LOW_STAMINA = 4; // below this she is 'tired' and the risky options
 // state of her bedroom (backgrounds/apartment.js).
 export const GLAD_HAPPINESS = 7; // at or above: she smiles, the room is tidy
 export const LOW_HAPPINESS = 2;  // at or below: she droops, the room is a mess
-export const HIGH_STRESS = 7;    // at or above: nothing has been dusted
+export const TENSE_STRESS = 5;   // at or above: work starts to pile up around the desk
+export const HIGH_STRESS = 7;    // at or above: the room is buried, and nothing has been dusted
 
 // Returns the list of {key, delta} actually applied (after clamping) so the
 // HUD can show toasts.

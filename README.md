@@ -65,18 +65,25 @@ reachedOut, ...), not by the bars, so the bars are feedback rather than gates
 — except Stamina, which gates the tired options.
 
 The bars also show in the picture. Amara's resting face follows Happiness, and
-so does her bedroom (`bedroom()` in `js/backgrounds/apartment.js`):
+her bedroom follows both Happiness and Stress (`bedroom()` in
+`js/backgrounds/apartment.js`). The worse bar wins.
 
-| Happiness | Bedroom |
+| Happiness | Bed and floor |
 |---|---|
 | 7 or more | tidy: bed made, string lights on |
 | 3 to 6 | lived-in: blanket turned back, a manga on the bed, a cardigan over the footboard |
 | 2 or less | messy: blanket on the floor, clothes and manga strewn about, lights off |
 
-Dust and a cobweb appear when Stress is 7 or more. A scene can ask for at
-least some neglect whatever the bars say (`bedroom({ dusty: true })` in
-deadline week), but never for less. The room is worked out once when a scene
-starts, so it does not change mid-conversation.
+| Stress | Work clutter |
+|---|---|
+| under 5 | none |
+| 5 or 6 | a deadline calendar and sticky notes by the desk, pages and a coffee cup on it, a bin of crumpled drafts; the bed is at best lived-in |
+| 7 or more | notes everywhere, the bin overflowing, pages and cans across the floor; the bed is messy, and dust and a cobweb appear |
+
+A scene can ask for at least some neglect whatever the bars say
+(`bedroom({ clutter: 1, dusty: true })` in deadline week), but never for less.
+The room is worked out once when a scene starts, so it does not change
+mid-conversation.
 
 ## Rendering
 
@@ -120,4 +127,3 @@ the system "reduce motion" setting on, everyone stands still.
 ## Endings
 
 `WHOLE`, `STEADY`, `REBUILT`, `THE LONG WAY BACK`, `THE HONEST ONE`.
-The title screen tracks which you have found (localStorage).

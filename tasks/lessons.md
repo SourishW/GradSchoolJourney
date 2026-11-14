@@ -30,6 +30,16 @@ Rules learned from corrections on this project. Read at the start of a session.
   `js/render/characters.js`), and keep loops for ongoing states like swaying
   or breathing. (Feedback, 2026-11-13.)
 
+## Backgrounds
+
+- When a picture is tied to the bars, give every bar the user can see its own
+  visible effect, and make the middle of the range show, not only the
+  extreme. The first mood-driven bedroom put mess on Happiness alone and gave
+  Stress only a thin film of dust at 7+, so a stressed Amara stood in a tidy
+  room. ("when she is stressed...there isn't enough of a mess", 2026-11-14.)
+- Check how often each state really occurs (tally over random play-throughs)
+  before choosing thresholds; Stress rarely passes 7 in bedroom scenes.
+
 ## Tools and environment
 
 - Headless Firefox here is a snap: it cannot read or write under `/tmp`.
