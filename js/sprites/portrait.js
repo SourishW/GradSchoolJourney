@@ -7,7 +7,7 @@
 
 import { softOutline } from './soft_outline.js';
 import { mix, shade } from './color.js';
-import { SHARED_COLORS } from './humanoid_hd.js';
+import { SHARED_COLORS } from './humanoid.js';
 
 export const PORTRAIT_SIZE = 64;
 

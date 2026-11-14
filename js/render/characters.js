@@ -1,13 +1,15 @@
 // Draws the visible cast for the current scene. `x` in a cast entry is the
 // character's foot centre in logical pixels; everyone stands on FLOOR_Y.
 
-import { characterSprite } from '../sprites/cast.js';
+import { characterSprite, CAST } from '../sprites/cast.js';
 import { PROPS } from '../sprites/props.js';
 import { SPRITE_WIDTH, SPRITE_HEIGHT } from '../sprites/humanoid.js';
 import { rasterize } from '../sprites/pixel_sprite.js';
 import { LOW_STAMINA } from '../engine/stats.js';
 
-export const SPRITE_SCALE = 3; // 32x58 sprite -> 96x174 on the 768x432 stage
+// 64x116 sprite -> 96x174 on the 768x432 stage. The canvas itself is twice
+// that, so one sprite pixel is exactly 3x3 device pixels.
+export const SPRITE_SCALE = 1.5;
 export const FLOOR_Y = 292;
 
 const propCache = new Map();
@@ -41,21 +43,23 @@ export function drawCharacters(ctx, player, logicalWidth) {
   for (const member of player.castVisible) {
     const facing = member.x < logicalWidth / 2 ? 'right' : 'left';
     const pose = moodPose(member.who, player.poses[member.who] ?? 'idle', stats);
-    const sprite = characterSprite(member.who, pose, facing, lookFor(member.who, stats));
+    const propName = player.props[member.who];
+    const prop = propName ? PROPS[propName] : null;
+    const look = { ...lookFor(member.who, stats), ...(prop?.arms ? { arms: prop.arms } : {}) };
+    const sprite = characterSprite(member.who, pose, facing, look);
     const left = Math.round(member.x - (SPRITE_WIDTH * SPRITE_SCALE) / 2);
     const top = FLOOR_Y - SPRITE_HEIGHT * SPRITE_SCALE;
     ctx.drawImage(sprite, left, top, SPRITE_WIDTH * SPRITE_SCALE, SPRITE_HEIGHT * SPRITE_SCALE);
 
-    const propName = pose === 'violin' ? 'violin' : player.props[member.who];
-    if (propName) {
-      const prop = propSprite(propName);
-      const { offset } = PROPS[propName];
+    if (prop) {
+      const image = propSprite(propName);
+      const drop = prop.followsBody ? CAST[member.who].shorter ?? 0 : 0;
       ctx.drawImage(
-        prop,
-        left + offset.x * SPRITE_SCALE,
-        top + offset.y * SPRITE_SCALE,
-        prop.width * SPRITE_SCALE,
-        prop.height * SPRITE_SCALE,
+        image,
+        left + prop.offset.x * SPRITE_SCALE,
+        top + (prop.offset.y + drop) * SPRITE_SCALE,
+        image.width * SPRITE_SCALE,
+        image.height * SPRITE_SCALE,
       );
     }
   }

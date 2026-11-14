@@ -44,7 +44,7 @@ css/game.css            canvas sizing, pixel rendering
 js/main.js              boot + render loop
 js/engine/              scene_player (story walker), stats, input, audio, text_layout
 js/render/              dialogue_box, characters, hud, title_screen, ending_screen
-js/sprites/             humanoid (parametric 16x24 character), cast (palettes), props
+js/sprites/             humanoid (parametric 64x116 character), cast (palettes and looks), props
 js/backgrounds/         one painter per location
 js/story/               one file per chapter; story_graph assembles them; endings
 tools/check_story.js    graph + sprite validation, random-walk simulation
@@ -66,12 +66,23 @@ reachedOut, ...), not by the bars, so the bars are feedback rather than gates
 
 ## Rendering
 
-Stage is 768x432 logical pixels. Characters are a parametric 32x58 sprite
-(`js/sprites/humanoid.js`) drawn at 3x (a 64x104 version and a 64x64
-dialogue portrait live in `humanoid_hd.js` / `portrait.js` for a future art
-pass and are not wired in yet); backgrounds are vector-painted on a
-384x216 grid and drawn at 2x. Dialogue uses VT323 at 20px; names and titles
-use Press Start 2P.
+Stage is 768x432 logical pixels on a 1536x864 canvas. Characters are a
+parametric 64x116 sprite (`js/sprites/humanoid.js`, with the body in
+`humanoid_body.js` and the head and hair in `humanoid_head.js`) drawn at 1.5x,
+so one sprite pixel is exactly 3x3 canvas pixels. Each cast member in
+`js/sprites/cast.js` has a palette plus a look: build, height, hairstyle,
+outfit and accessories. Body parts are painted on separate layers and each
+gets a dark, hue-tinted outline. Backgrounds are vector-painted on a 384x216
+grid and drawn at 2x. Dialogue uses VT323 at 20px; names and titles use Press
+Start 2P. (`js/sprites/portrait.js`, a 64x64 dialogue portrait, is not wired
+in.)
+
+To look at the whole cast in every pose:
+
+```sh
+node tools/export_sprite_sheet.js sheet.png 3            # everyone, every pose
+node tools/export_sprite_sheet.js amara.png 5 amara idle,grad,violin
+```
 
 ## Endings
 

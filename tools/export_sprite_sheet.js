@@ -1,6 +1,6 @@
 // Writes a PNG sprite sheet of the cast (one row per character, one column
 // per pose) with no dependencies beyond Node's zlib.
-//   node tools/export_sprite_sheet.js out.png [scale] [character]
+//   node tools/export_sprite_sheet.js out.png [scale] [character|all] [pose,pose,...]
 
 import { writeFileSync } from 'node:fs';
 import { deflateSync } from 'node:zlib';
@@ -8,15 +8,14 @@ import { CAST } from '../js/sprites/cast.js';
 import { humanoid, POSES, SPRITE_WIDTH, SPRITE_HEIGHT } from '../js/sprites/humanoid.js';
 import { PROPS } from '../js/sprites/props.js';
 
-const [outPath = 'sprites.png', scaleArg = '4', onlyWho] = process.argv.slice(2);
+const [outPath = 'sprites.png', scaleArg = '4', onlyWho = 'all', onlyPoses] = process.argv.slice(2);
 const SCALE = Number(scaleArg);
 const GAP = 6;
-const GOWN = { top: '#1c1c28', topDetail: '#3a3a52', bottom: '#1c1c28', topStyle: 'hoodie' };
 
-const poseNames = Object.keys(POSES);
-const names = onlyWho ? [onlyWho] : Object.keys(CAST);
-// Extra room on the left for the violin and cello, which hang off the sprite.
-const CELL_W = SPRITE_WIDTH + 22;
+const poseNames = onlyPoses ? onlyPoses.split(',') : Object.keys(POSES);
+const names = onlyWho === 'all' ? Object.keys(CAST) : [onlyWho];
+// Extra room on the left for the cello, which stands beside the sprite.
+const CELL_W = SPRITE_WIDTH + 30;
 const CELL_H = SPRITE_HEIGHT + 2;
 const width = (CELL_W + GAP) * poseNames.length * SCALE;
 const height = (CELL_H + GAP) * names.length * SCALE;
@@ -48,12 +47,16 @@ function blit(rows, colors, originX, originY) {
 names.forEach((who, row) => {
   poseNames.forEach((pose, column) => {
     const face = POSES[pose];
-    const sprite = humanoid({ ...CAST[who], ...face, facing: 'right', ...(face.gown ? GOWN : {}) });
-    const originX = column * (CELL_W + GAP) + 20;
+    const holdsCake = who === 'priya' && pose === 'happy';
+    const sprite = humanoid({ ...CAST[who], ...face, facing: 'right', ...(holdsCake ? { arms: 'hold' } : {}), ...(who === 'amara' && pose === 'tired' ? { disheveled: true } : {}) });
+    const originX = column * (CELL_W + GAP) + 28;
     const originY = row * (CELL_H + GAP) + 1;
     blit(sprite.rows, sprite.colors, originX, originY);
-    const prop = pose === 'violin' ? 'violin' : who === 'priya' && pose === 'happy' ? 'cake' : who === 'jun' && pose === 'idle' ? 'cello' : null;
-    if (prop) blit(PROPS[prop].rows, PROPS[prop].colors, originX + PROPS[prop].offset.x, originY + PROPS[prop].offset.y);
+    const prop = holdsCake ? 'cake' : who === 'jun' && pose === 'idle' ? 'cello' : null;
+    if (prop) {
+      const { rows, colors, offset, followsBody } = PROPS[prop];
+      blit(rows, colors, originX + offset.x, originY + offset.y + (followsBody ? CAST[who].shorter ?? 0 : 0));
+    }
   });
 });
 
