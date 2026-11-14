@@ -30,7 +30,6 @@ export const prologue = {
     cast: [{ who: 'amara', x: 192 }, { who: 'priya', x: 544, pose: 'happy' }],
     lines: [
       { who: 'priya', text: 'New person! Department social tonight. Seven. The cafe on Fourth. Free food.' },
-      { who: 'priya', pose: 'idle', text: 'Good food, even. The department splurges exactly once a year.' },
       { who: 'amara', text: 'I was going to read the papers Dr. Park sent...' },
       { who: 'priya', text: 'The papers will still be there tomorrow. The people might not be.' },
       { who: 'narrator', text: 'Two paths. Both reasonable. Only one of them is the right one.' },
