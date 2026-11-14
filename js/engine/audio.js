@@ -20,16 +20,23 @@ export class GameAudio {
     return this.muted;
   }
 
-  tone(frequency, durationSeconds, type = 'square', gain = 0.04) {
+  // A soft tone: a short attack so it never clicks, a low-pass filter to
+  // round off the edges, then an exponential decay.
+  tone(frequency, durationSeconds, type = 'triangle', gain = 0.05, cutoffHz = 1400) {
     if (!this.context || this.muted) return;
     const now = this.context.currentTime;
+    const ATTACK_SECONDS = 0.012;
     const oscillator = this.context.createOscillator();
+    const filter = this.context.createBiquadFilter();
     const amp = this.context.createGain();
     oscillator.type = type;
     oscillator.frequency.value = frequency;
-    amp.gain.setValueAtTime(gain, now);
+    filter.type = 'lowpass';
+    filter.frequency.value = cutoffHz;
+    amp.gain.setValueAtTime(0.0001, now);
+    amp.gain.exponentialRampToValueAtTime(gain, now + ATTACK_SECONDS);
     amp.gain.exponentialRampToValueAtTime(0.0001, now + durationSeconds);
-    oscillator.connect(amp).connect(this.context.destination);
+    oscillator.connect(filter).connect(amp).connect(this.context.destination);
     oscillator.start(now);
     oscillator.stop(now + durationSeconds);
   }
@@ -38,20 +45,21 @@ export class GameAudio {
   // a handful of blips with a little pitch wobble so it reads as a voice.
   speak(pitch) {
     if (!this.context || this.muted || pitch <= 0) return;
-    const BLIPS = 6;
-    const SPACING_SECONDS = 0.055;
+    const BLIPS = 5;
+    const SPACING_SECONDS = 0.07;
+    const VOICE_PITCH_SCALE = 0.6; // speaker pitches were tuned for a square wave; sine sits lower
     for (let index = 0; index < BLIPS; index++) {
       const wobble = 1 + (index % 2 === 0 ? 0.03 : -0.04);
-      setTimeout(() => this.tone(pitch * wobble, 0.045), index * SPACING_SECONDS * 1000);
+      setTimeout(() => this.tone(pitch * VOICE_PITCH_SCALE * wobble, 0.11, 'sine', 0.07, 900), index * SPACING_SECONDS * 1000);
     }
   }
 
   tick() {
-    this.tone(880, 0.03, 'triangle', 0.05);
+    this.tone(660, 0.05, 'sine', 0.05, 1200);
   }
 
   confirm() {
-    this.tone(660, 0.08, 'triangle', 0.05);
+    this.tone(520, 0.12, 'sine', 0.06, 1200);
   }
 
   chord() {

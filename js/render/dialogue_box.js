@@ -4,8 +4,16 @@
 
 import { wrapText } from '../engine/text_layout.js';
 
-export const BOX = { x: 16, y: 300, w: 736, h: 120 };
-const PADDING = 14;
+// The box is anchored to the bottom of the stage. Dialogue uses a compact
+// fixed height (name + up to three lines); a choice menu grows upward as far
+// as it needs, up to MAX_BOX_HEIGHT, before falling back to the small font.
+const BOX_X = 16;
+const BOX_WIDTH = 736;
+const BOX_BOTTOM = 420;
+const TEXT_BOX_HEIGHT = 96;
+const MAX_BOX_HEIGHT = 136;
+const PADDING = 12;
+let BOX = { x: BOX_X, y: BOX_BOTTOM - TEXT_BOX_HEIGHT, w: BOX_WIDTH, h: TEXT_BOX_HEIGHT };
 const LINE_HEIGHT = 22;
 export const BODY_FONT = '20px "VT323", "Courier New", monospace';
 const SMALL_BODY_FONT = '17px "VT323", "Courier New", monospace';
@@ -14,14 +22,17 @@ export const NAME_FONT = '9px "Press Start 2P", monospace';
 
 export function drawDialogueBox(ctx, player) {
   ctx.save();
+  ctx.textBaseline = 'top';
+  const plan = player.mode === 'choice' ? planChoices(ctx, player) : null;
+  const height = plan ? Math.min(MAX_BOX_HEIGHT, Math.max(TEXT_BOX_HEIGHT, plan.total + PADDING * 2)) : TEXT_BOX_HEIGHT;
+  BOX = { x: BOX_X, y: BOX_BOTTOM - height, w: BOX_WIDTH, h: height };
   ctx.fillStyle = '#000';
   ctx.fillRect(BOX.x, BOX.y, BOX.w, BOX.h);
   ctx.strokeStyle = '#f0f0f8';
   ctx.lineWidth = 3;
   ctx.strokeRect(BOX.x + 1.5, BOX.y + 1.5, BOX.w - 3, BOX.h - 3);
-  ctx.textBaseline = 'top';
 
-  if (player.mode === 'choice') drawChoices(ctx, player);
+  if (plan) drawChoices(ctx, player, plan);
   else drawLine(ctx, player);
   ctx.restore();
 }
@@ -38,7 +49,7 @@ function drawLine(ctx, player) {
   ctx.font = BODY_FONT;
   ctx.fillStyle = style.name ? '#f8f8ff' : '#c8c8d8';
   const lines = wrapText(ctx, player.shownText, BOX.w - PADDING * 2);
-  lines.slice(0, 4).forEach((line, index) => {
+  lines.slice(0, 3).forEach((line, index) => {
     ctx.fillText(line, BOX.x + PADDING, textY + index * LINE_HEIGHT);
   });
   if (player.typingDone && player.mode === 'text' && Math.floor(performance.now() / 400) % 2 === 0) {
@@ -48,19 +59,21 @@ function drawLine(ctx, player) {
 }
 
 // Choices wrap to as many lines as they need; if the whole menu does not fit
-// at the normal size it drops to the smaller font rather than truncating.
-function drawChoices(ctx, player) {
-  const available = BOX.h - PADDING * 2;
-  const textWidth = BOX.w - PADDING * 2 - 28;
+// even in the tallest box it drops to the smaller font rather than truncating.
+function planChoices(ctx, player) {
+  const available = MAX_BOX_HEIGHT - PADDING * 2;
+  const textWidth = BOX_WIDTH - PADDING * 2 - 28;
   const layout = (font, lineHeight) => {
     ctx.font = font;
     const rows = player.choices.map((choice) => wrapText(ctx, player.resolve(choice.text), textWidth));
     const total = rows.reduce((sum, lines) => sum + lines.length * lineHeight, 0) + (rows.length - 1) * 4;
     return { font, lineHeight, rows, total };
   };
-  let plan = layout(BODY_FONT, LINE_HEIGHT);
-  if (plan.total > available) plan = layout(SMALL_BODY_FONT, SMALL_LINE_HEIGHT);
+  const plan = layout(BODY_FONT, LINE_HEIGHT);
+  return plan.total > available ? layout(SMALL_BODY_FONT, SMALL_LINE_HEIGHT) : plan;
+}
 
+function drawChoices(ctx, player, plan) {
   player.choiceRects = [];
   let y = BOX.y + PADDING;
   ctx.font = plan.font;
