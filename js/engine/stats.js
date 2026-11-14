@@ -14,7 +14,7 @@ export const STAT_LABELS = [
 ];
 
 export function createStats() {
-  return { stamina: 8, happiness: 5, stress: 2 };
+  return { stamina: 8, happiness: 5, stress: 3 };
 }
 
 export const LOW_STAMINA = 4; // below this she is 'tired' and the risky options appear

@@ -11,6 +11,7 @@ export const theDeadline = {
   card_deadline: {
     type: 'card',
     text: 'A season later.\nA deadline.',
+    enter: { effects: { stamina: 1, stress: 1 } },
     next: 'deadline_eve',
   },
 
@@ -21,18 +22,18 @@ export const theDeadline = {
     cast: [{ who: 'amara', x: 384 }],
     lines: [
       { who: 'narrator', text: 'Ten days to the submission. The results are close. Not done. Close.' },
-      { who: 'narrator', text: 'It is 1am. You can choose to keep working, but your stamina will drop. The bar in the corner is not decoration.' },
+      { who: 'narrator', text: 'It is 1am. You can choose to keep working, but your stamina will drop.' },
     ],
     choices: [
       {
         text: 'Sleep. Set the alarm for six. Tired brains write bugs.',
-        effects: { stamina: 2, stress: -1 },
+        effects: { stamina: 2, stress: -1, happiness: 1 },
         set: { sleptWell: true },
         next: 'deadline_lab',
       },
       {
         text: 'Work through the night. Every hour counts.',
-        effects: { stamina: -6, stress: 2 },
+        effects: { stamina: -6, stress: 2, happiness: -1 },
         set: { sleptWell: false },
         next: 'deadline_lab',
       },
@@ -55,7 +56,7 @@ export const theDeadline = {
       {
         when: (s) => !tired(s),
         text: 'Run the verification. Cut the fourth experiment if I have to.',
-        effects: { stress: -1 },
+        effects: { stress: -1, stamina: -1 },
         set: { mistake: null },
         next: 'honest_table',
       },
@@ -108,13 +109,13 @@ export const theDeadline = {
       {
         text: 'Fill in the missing cells with what they "should" be. Re-run later, quietly.',
         set: { fabricated: true },
-        effects: { stress: 2 },
+        effects: { stress: 2, happiness: -1 },
         next: 'card_submitted',
       },
       {
         text: 'Call Dr. Park tonight. Submit what is real, or do not submit.',
         set: { fabricated: false },
-        effects: { stress: -2 },
+        effects: { stress: -1 },
         next: 'card_submitted',
       },
     ],
@@ -134,7 +135,7 @@ export const theDeadline = {
       {
         text: 'Drop the odd run. Report the clean four.',
         set: { fabricated: true },
-        effects: { stress: 1 },
+        effects: { stress: 2, happiness: -1 },
         next: 'card_submitted',
       },
       {
@@ -159,7 +160,7 @@ export const theDeadline = {
       {
         text: 'Leave that setting out of the table.',
         set: { fabricated: true },
-        effects: { stress: 1 },
+        effects: { stress: 2, happiness: -1 },
         next: 'card_submitted',
       },
       {
@@ -176,6 +177,7 @@ export const theDeadline = {
     text: (s) => (s.flags.fabricated
       ? 'The submission goes out.\nThe logs stay on the cluster.'
       : 'The submission goes out.\nShe sleeps for eleven hours.'),
+    enter: { effects: { stamina: 3, stress: -1 } },
     next: (s) => {
       if (s.flags.fabricated) return 'grilling_fabricated';
       if (s.flags.mistake === 'deleted') return 'grilling_deleted';

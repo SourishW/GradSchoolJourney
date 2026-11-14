@@ -9,7 +9,7 @@ export const theLowPoint = {
     lines: [
       { who: 'narrator', text: 'She does not go in on Monday. Or Tuesday.' },
       { who: 'narrator', text: 'She tells herself she is working from home. The laptop stays closed.' },
-      { who: 'narrator', text: 'There is nobody to bring cake, because she never gave anyone the chance to know she would need one.', effects: { stress: 2, happiness: -2 } },
+      { who: 'narrator', text: 'There is nobody to bring cake, because she never gave anyone the chance to know she would need one.', effects: { stress: 2, happiness: -2, stamina: -2 } },
     ],
     next: 'card_days',
   },
@@ -17,6 +17,7 @@ export const theLowPoint = {
   card_days: {
     type: 'card',
     text: 'Days.\nThen more days.',
+    enter: { effects: { stamina: -1, happiness: -1 } },
     next: 'crying_scene',
   },
 
@@ -27,7 +28,7 @@ export const theLowPoint = {
     cast: [{ who: 'amara', x: 384, pose: 'cry' }],
     lines: [
       { who: 'narrator', text: 'On the ninth day she cries, properly, on the kitchen floor, for reasons that are no longer only about the paper.' },
-      { who: 'narrator', text: 'She does not call it depression yet. But she has stopped eating lunch, and she has stopped answering texts.' },
+      { who: 'narrator', text: 'She does not call it depression yet. But she has stopped eating lunch, and she has stopped answering texts.', effects: { stamina: -1 } },
       { who: 'narrator', when: (s) => s.flags.violin, text: 'She has missed three Thursdays. Jun has texted twice. The violin case has dust on it.' },
       { who: 'narrator', when: (s) => !s.flags.violin, text: 'The violin case under the bed has dust on it. It has had dust on it for a long time.' },
       { who: 'amara', text: 'I should have built this when it was easy. Friends. Labmates. People who would notice. I waited until I needed them.', effects: { happiness: -2 } },
@@ -68,7 +69,7 @@ export const theLowPoint = {
       { who: 'narrator', text: 'She talks for fifty minutes. About the paper, and then not about the paper.' },
       { who: 'clara', pose: 'idle', text: 'What you are describing has a name, and it is treatable, and you did the hardest part by walking in.' },
       { who: 'clara', text: 'The college provides this to every student. You are not taking it from anyone. Same time next week?' },
-      { who: 'amara', pose: 'idle', text: 'Same time next week.', effects: { stress: -3, happiness: 2 } },
+      { who: 'amara', pose: 'idle', text: 'Same time next week.', effects: { stress: -3, happiness: 2, stamina: 1 } },
       { who: 'narrator', text: 'On the way out she texts Daniel back.' },
     ],
     next: 'cafe_dev',
@@ -86,7 +87,7 @@ export const theLowPoint = {
     choices: [
       {
         text: 'Go to the office.',
-        effects: { stamina: 1 },
+        effects: { happiness: 1 },
         set: { reachedOut: true },
         next: 'office_return',
       },
@@ -124,7 +125,7 @@ export const theLowPoint = {
       {
         when: (s) => !s.flags.counseling,
         text: 'Book an appointment this week.',
-        effects: { stress: -5, happiness: 2 },
+        effects: { stress: -3, happiness: 2, stamina: 1 },
         set: { counseling: true },
         next: 'cafe_dev_violin',
       },
@@ -158,7 +159,7 @@ export const theLowPoint = {
       {
         when: (s) => !s.flags.violin,
         text: 'Dust it off. Thursday.',
-        effects: { happiness: 3 },
+        effects: { happiness: 2 },
         set: { violin: true, lateViolin: true },
         next: 'card_day_seven_late',
       },
@@ -178,6 +179,7 @@ export const theLowPoint = {
   card_day_seven_late: {
     type: 'card',
     text: 'It takes longer than seven days.\nThe floor comes back anyway.',
+    enter: { effects: { stamina: 2, stress: -2, happiness: 1 } },
     next: 'resubmit',
   },
 };

@@ -7,6 +7,7 @@ export const graduation = {
   card_graduation: {
     type: 'card',
     text: 'Some years after the first week.\nThe exact number does not matter.',
+    enter: { effects: { stamina: 1, stress: -1 } },
     next: 'graduation_ceremony',
   },
 
@@ -31,7 +32,7 @@ export const graduation = {
       { who: 'narrator', when: (s) => s.flags.violin, text: 'The string band plays her off the stage. Badly in places. Joyfully throughout.' },
       { who: 'narrator', when: (s) => s.flags.mentored, text: 'Sam, now a second-year, is taking notes. He has a plan B written down.' },
       { who: 'narrator', when: (s) => !hasSupport(s), text: 'The hall is full of people she did not let herself know. She knows that now. It is the last lesson, and it arrives on time.' },
-      { who: 'amara', pose: 'grad', text: 'Okay.' },
+      { who: 'amara', pose: 'grad', text: 'Okay.', effects: { happiness: 1, stress: -1 } },
     ],
     next: 'ending',
   },

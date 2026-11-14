@@ -16,7 +16,7 @@ export const staying = {
       { who: 'phone', when: hasSupport, text: (s) => (s.flags.friends
         ? "Priya: you've got this. also we are out of cake. unrelated."
         : 'Daniel: Reviewer 2 is still wrong. I put a rebuttal draft in the shared folder for when you want it.') },
-      { who: 'amara', pose: 'happy', text: 'Okay. Fixing the ablation. Resubmitting.', effects: { stress: -2 }, set: { resubmitted: true } },
+      { who: 'amara', pose: 'happy', text: 'Okay. Fixing the ablation. Resubmitting.', effects: { stress: -2, happiness: 1 }, set: { resubmitted: true } },
     ],
     next: (s) => (s.flags.violin ? 'concert' : 'quiet_thursday'),
   },
@@ -33,7 +33,7 @@ export const staying = {
       { who: 'narrator', text: 'Jun has played cello for nineteen years and defends their thesis in a month. They seem fine. Suspiciously fine.' },
       { who: 'jun', pose: 'happy', text: 'The guilt does not go away, if that is what you are waiting for. It just gets quieter than the music.' },
       { who: 'amara', pose: 'violin', text: '...' },
-      { who: 'narrator', text: 'They play. Badly in places. Joyfully throughout. Nobody in the room is thinking about schedulers.', effects: { happiness: 3, stress: -2 }, set: { concert: true } },
+      { who: 'narrator', text: 'They play. Badly in places. Joyfully throughout. Nobody in the room is thinking about schedulers.', effects: { happiness: 2, stress: -2, stamina: 1 }, set: { concert: true } },
     ],
     next: 'card_time_uneven',
   },
@@ -44,7 +44,7 @@ export const staying = {
     bgVariant: 'night',
     cast: [{ who: 'amara', x: 384 }],
     lines: [
-      { who: 'narrator', text: 'Thursday. She works. The apartment is quiet in the way that is not peaceful.', effects: { stress: 1 } },
+      { who: 'narrator', text: 'Thursday. She works. The apartment is quiet in the way that is not peaceful.', effects: { stress: 1, happiness: -1, stamina: -1 } },
       { who: 'narrator', text: 'The violin case is still under the bed.' },
     ],
     choices: [
@@ -76,6 +76,7 @@ export const staying = {
   card_time_uneven: {
     type: 'card',
     text: 'Time passes the way it does:\nunevenly.',
+    enter: { effects: { stamina: 1, stress: -1, happiness: 1 } },
     next: 'comparison',
   },
 
@@ -114,7 +115,7 @@ export const staying = {
     cast: [{ who: 'amara', x: 192 }, { who: 'priya', x: 544, when: (s) => s.flags.friends }, { who: 'daniel', x: 544, when: (s) => !s.flags.friends }],
     lines: [
       { who: 'narrator', text: 'Either way, she stays. Not because she must. Because she chose to, for now, with her eyes open.' },
-      { who: 'narrator', text: 'That turns out to be the only kind of staying that works.' },
+      { who: 'narrator', text: 'That turns out to be the only kind of staying that works.', effects: { stress: -2, happiness: 1 } },
     ],
     next: 'card_season',
   },
@@ -122,6 +123,7 @@ export const staying = {
   card_season: {
     type: 'card',
     text: 'A season later.',
+    enter: { effects: { stamina: 1, stress: -1 } },
     next: 'acceptance',
   },
 
@@ -132,7 +134,7 @@ export const staying = {
       { who: 'email', text: 'We are pleased to inform you that your submission has been accepted. The reviewers particularly appreciated the thorough ablation.' },
       { who: 'amara', pose: 'shock', text: 'The ablation.' },
       { who: 'daniel', pose: 'happy', text: 'Reviewer 1 sends their regards.' },
-      { who: 'amara', pose: 'happy', text: 'It does not feel like I thought it would. It feels... normal. Like a Tuesday.', effects: { stress: -3 } },
+      { who: 'amara', pose: 'happy', text: 'It does not feel like I thought it would. It feels... normal. Like a Tuesday.', effects: { stress: -3, happiness: 2, stamina: 1 } },
       { who: 'daniel', text: 'That is the secret. Nobody tells you. The highs are Tuesdays too.' },
     ],
     next: 'card_another_first_week',

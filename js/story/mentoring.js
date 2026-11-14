@@ -5,6 +5,7 @@ export const mentoring = {
   card_another_first_week: {
     type: 'card',
     text: 'Another first week.\nNot hers.',
+    enter: { effects: { stamina: 2, stress: -1, happiness: 1 } },
     next: 'mentoring_sam',
   },
 
@@ -41,7 +42,7 @@ export const mentoring = {
       { who: 'sam', pose: 'idle', text: 'And if I run out of lines?' },
       { who: 'amara', pose: 'happy', text: 'Then you ask Daniel, or me. That is literally what labmates are for.' },
       { who: 'amara', text: 'Also: department social tonight. Free food, and it is actually good. Come.' },
-      { who: 'sam', pose: 'happy', text: 'Okay.' },
+      { who: 'sam', pose: 'happy', text: 'Okay.', effects: { happiness: 1 } },
     ],
     next: 'card_graduation',
   },

@@ -8,7 +8,7 @@ const SOFTENING_LINES = [
   { who: 'park', text: 'That is the actual bug. Everything else today is a symptom of it.' },
   { who: 'park', pose: 'kind', text: 'I am angry because I expected better. And because I still do.' },
   { who: 'park', pose: 'idle', text: 'Burnout is not a badge. It is a failure mode, like any other. Take the weekend. All of it. Then we rebuild this the right way: verification in the schedule, not after it.' },
-  { who: 'amara', pose: 'idle', text: 'Okay.', effects: { stress: -4, stamina: 2 } },
+  { who: 'amara', pose: 'idle', text: 'Okay.', effects: { stress: -3, stamina: 3, happiness: 1 } },
 ];
 
 export const theGrilling = {
@@ -17,7 +17,7 @@ export const theGrilling = {
     cast: [{ who: 'amara', x: 192, pose: 'sad' }, { who: 'park', x: 544, pose: 'angry' }],
     lines: [
       { who: 'narrator', text: 'Daniel, checking a related result, pulls her logs. The logs and the table disagree. He tells Dr. Park, because that is what you do.' },
-      { who: 'park', text: 'Look at this table. Now look at your logs. Explain the difference to me.' },
+      { who: 'park', text: 'Look at this table. Now look at your logs. Explain the difference to me.', effects: { stress: 3 } },
       { who: 'amara', text: 'I...' },
       { who: 'park', text: 'Do you understand what this is called? This is called academic dishonesty. Fabrication.' },
       { who: 'park', text: 'If this had gone out under my name, it would have ended both of us.', effects: { happiness: -2 } },
@@ -33,7 +33,7 @@ export const theGrilling = {
     bg: 'office',
     cast: [{ who: 'amara', x: 192, pose: 'sad' }, { who: 'park', x: 544, pose: 'angry' }],
     lines: [
-      { who: 'park', text: 'You gave a program permission to do anything. You told it not to ask. And then you left the building.' },
+      { who: 'park', text: 'You gave a program permission to do anything. You told it not to ask. And then you left the building.', effects: { stress: 2 } },
       { who: 'amara', text: 'It was supposed to finish the sweep.' },
       { who: 'park', text: 'That was not a tool failure. That was an attention failure. The tool was present. You were not.' },
       { who: 'park', text: 'Three months, Amara.', effects: { happiness: -2 } },
@@ -61,7 +61,7 @@ export const theGrilling = {
     bg: 'office',
     cast: [{ who: 'amara', x: 192, pose: 'sad' }, { who: 'park', x: 544, pose: 'angry' }],
     lines: [
-      { who: 'park', text: 'I quoted your 31% to a colleague this morning. Daniel tells me it is 9.' },
+      { who: 'park', text: 'I quoted your 31% to a colleague this morning. Daniel tells me it is 9.', effects: { stress: 2 } },
       { who: 'park', text: 'A verification run costs one day. This costs the paper, and some of my name with it.' },
       { who: 'park', text: 'Why was there no verification run?' },
     ],
@@ -110,7 +110,7 @@ export const theGrilling = {
       { who: 'park', pose: 'idle', text: 'The students who destroy themselves for a deadline rarely finish. The ones who finish learned to pick the hard, boring, correct thing.' },
       { who: 'park', text: 'Next time, the verification run goes in the schedule on day one. Not day sixty-nine.' },
       { who: 'park', pose: 'kind', text: 'And when a run does go wrong, come tell me the same day. Owning it early is most of the fix.' },
-      { who: 'amara', pose: 'happy', text: 'Day one. Got it.', effects: { stress: -1 } },
+      { who: 'amara', pose: 'happy', text: 'Day one. Got it.', effects: { stress: -1, happiness: 1 } },
     ],
     next: 'card_reviews',
   },
@@ -120,6 +120,7 @@ export const theGrilling = {
     text: (s) => (s.flags.fabricated
       ? 'The rebuilt paper goes out, every number checked twice.\nMonths pass. Reviews come back.'
       : 'Months pass.\nReviews come back.'),
+    enter: { effects: { stamina: 2, stress: -2, happiness: 1 } },
     next: 'rejection_day_one',
   },
 };

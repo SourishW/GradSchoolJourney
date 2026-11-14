@@ -31,7 +31,7 @@ export const theRejection = {
       { who: 'narrator', text: 'She cries about the cake. Nobody minds. Priya finds plates.' },
       { who: 'daniel', pose: 'idle', text: 'When you are ready, not tonight: Reviewer 1 is right about the ablation. We can fix that in a weekend.' },
       { who: 'daniel', text: 'Reviewer 2 is wrong, and we will say so. Politely. With a plot.' },
-      { who: 'amara', pose: 'happy', text: 'Not tonight.', effects: { happiness: 2, stress: -4 }, set: { cakeScene: true } },
+      { who: 'amara', pose: 'happy', text: 'Not tonight.', effects: { happiness: 2, stress: -3, stamina: 1 }, set: { cakeScene: true } },
       { who: 'priya', pose: 'happy', text: 'Not tonight. Tonight is cake.' },
     ],
     next: 'counseling_mention',
@@ -55,6 +55,7 @@ export const theRejection = {
   card_day_seven: {
     type: 'card',
     text: 'Day seven.\nThe floor is back.',
+    enter: { effects: { stamina: 2, stress: -1, happiness: 1 } },
     next: 'resubmit',
   },
 };

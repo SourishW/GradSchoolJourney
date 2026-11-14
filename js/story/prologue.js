@@ -37,7 +37,7 @@ export const prologue = {
     choices: [
       {
         text: 'Go to the social. Meet people, even though it is exhausting.',
-        effects: { happiness: 3, stamina: -1, stress: -1 },
+        effects: { happiness: 2, stamina: -1, stress: -1 },
         set: { friends: true },
         next: 'social',
       },
@@ -67,7 +67,7 @@ export const prologue = {
     choices: [
       {
         text: 'Audition Thursday. One evening a week is not going to sink a PhD.',
-        effects: { happiness: 3 },
+        effects: { happiness: 2 },
         set: { violin: true },
         next: 'card_months',
       },
@@ -94,7 +94,7 @@ export const prologue = {
     choices: [
       {
         text: 'Audition anyway. One evening a week.',
-        effects: { happiness: 3 },
+        effects: { happiness: 2 },
         set: { violin: true },
         next: 'card_months',
       },
