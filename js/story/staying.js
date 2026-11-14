@@ -1,6 +1,8 @@
 // Resubmission, life beyond the lab, and the night she drafts the email to
 // leave. A friend coaches her; she chooses to stay, eyes open.
 
+import { bedroom } from '../backgrounds/apartment.js';
+
 const hasSupport = (s) => s.flags.friends || s.flags.reachedOut;
 const friendName = (s) => (s.flags.friends ? 'priya' : 'daniel');
 
@@ -41,7 +43,7 @@ export const staying = {
   quiet_thursday: {
     bg: 'apartment',
     lesson: 'life_beyond_lab',
-    bgVariant: 'night',
+    bgVariant: bedroom(),
     cast: [{ who: 'amara', x: 384 }],
     lines: [
       { who: 'narrator', text: 'Thursday. She works. The apartment is quiet in the way that is not peaceful.', effects: { stress: 1, happiness: -1, stamina: -1 } },
@@ -63,7 +65,7 @@ export const staying = {
 
   first_notes: {
     bg: 'apartment',
-    bgVariant: 'night',
+    bgVariant: bedroom(),
     cast: [{ who: 'amara', x: 384, pose: 'violin' }],
     lines: [
       { who: 'narrator', text: 'The A string is flat. Her fingers remember more than she expected and less than she hoped.' },

@@ -4,6 +4,7 @@
 // Sets flags.mistake to null | 'deleted' | 'bug' and flags.fabricated.
 
 import { LOW_STAMINA } from '../engine/stats.js';
+import { bedroom } from '../backgrounds/apartment.js';
 
 const tired = (s) => s.stats.stamina < LOW_STAMINA;
 
@@ -18,7 +19,7 @@ export const theDeadline = {
   deadline_eve: {
     bg: 'apartment',
     lesson: 'prioritize_health',
-    bgVariant: 'night',
+    bgVariant: bedroom({ dusty: true }),
     cast: [{ who: 'amara', x: 384 }],
     lines: [
       { who: 'narrator', text: 'Ten days to the submission. The results are close. Not done. Close.' },
@@ -94,7 +95,7 @@ export const theDeadline = {
   agent_deletes: {
     bg: 'apartment',
     lesson: 'integrity',
-    bgVariant: 'night',
+    bgVariant: bedroom({ dusty: true }),
     cast: [{ who: 'amara', x: 384, pose: 'tired' }],
     lines: [
       { who: 'narrator', text: 'The agent runs for six hours. Nobody watches it. That was the point.' },

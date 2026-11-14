@@ -1,10 +1,12 @@
 // The lonely path. She disappears, she cries on the kitchen floor, and then,
 // because there is always a way back, someone reaches in and she reaches out.
 
+import { bedroom } from '../backgrounds/apartment.js';
+
 export const theLowPoint = {
   disappearing: {
     bg: 'apartment',
-    bgVariant: 'night',
+    bgVariant: bedroom(),
     cast: [{ who: 'amara', x: 384, pose: 'sad' }],
     lines: [
       { who: 'narrator', text: 'She does not go in on Monday. Or Tuesday.' },
@@ -23,7 +25,7 @@ export const theLowPoint = {
 
   crying_scene: {
     bg: 'apartment',
-    bgVariant: 'dusty',
+    bgVariant: bedroom({ care: 'messy', dusty: true, dark: true }),
     lesson: 'support_network',
     cast: [{ who: 'amara', x: 384, pose: 'cry' }],
     lines: [
@@ -77,7 +79,7 @@ export const theLowPoint = {
 
   second_nudge: {
     bg: 'apartment',
-    bgVariant: 'dusty',
+    bgVariant: bedroom({ care: 'messy', dusty: true, dark: true }),
     cast: [{ who: 'amara', x: 384, pose: 'sad' }],
     lines: [
       { who: 'narrator', text: 'Two more days.' },

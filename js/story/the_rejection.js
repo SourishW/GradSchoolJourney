@@ -1,11 +1,13 @@
 // The rejection. Day one is the floor giving way. With friends, there is cake.
 // Without them, the path goes through the low point first.
 
+import { bedroom } from '../backgrounds/apartment.js';
+
 export const theRejection = {
   rejection_day_one: {
     bg: 'apartment',
     lesson: 'rejection_is_normal',
-    bgVariant: 'night',
+    bgVariant: bedroom(),
     cast: [{ who: 'amara', x: 384 }],
     lines: [
       { who: 'email', text: 'We regret to inform you that your submission was not accepted. Reviews are attached. Reviewer 2 raises concerns about the baseline.' },
@@ -20,7 +22,7 @@ export const theRejection = {
   cake: {
     bg: 'apartment',
     lesson: 'support_network',
-    bgVariant: 'night',
+    bgVariant: bedroom(),
     cast: [{ who: 'amara', x: 144, pose: 'sad' }, { who: 'priya', x: 464, pose: 'happy', prop: 'cake' }, { who: 'daniel', x: 640 }],
     lines: [
       { who: 'narrator', text: 'A knock. Then a louder knock.' },
@@ -39,7 +41,7 @@ export const theRejection = {
 
   counseling_mention: {
     bg: 'apartment',
-    bgVariant: 'night',
+    bgVariant: bedroom(),
     lesson: 'seek_help',
     cast: [{ who: 'amara', x: 192 }, { who: 'priya', x: 544 }],
     lines: [

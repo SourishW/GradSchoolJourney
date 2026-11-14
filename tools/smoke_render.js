@@ -40,12 +40,17 @@ const ctx = stubContext();
 function renderFrame(player, now) {
   if (player.mode === 'title') return drawTitleScreen(ctx, 384, 216, now, 0, ENDINGS.length, now);
   if (player.mode === 'card') return drawCard(ctx, player, 384, 216);
-  BACKGROUNDS[player.scene.bg](ctx, player.resolve(player.scene.bgVariant), now);
+  BACKGROUNDS[player.scene.bg](ctx, player.bgVariant, now);
   drawCharacters(ctx, player, 384, now);
   drawHud(ctx, player);
   if (player.mode === 'ending') return drawEndingScreen(ctx, player, 384, 216);
   drawDialogueBox(ctx, player);
   if (player.mode === 'lesson') drawLessonCard(ctx, player);
+}
+
+// Every state the bedroom can be in, whether or not a walk reaches it.
+for (const light of ['night', 'day']) for (const care of ['tidy', 'lived', 'messy']) for (const dusty of [false, true]) for (const dark of [false, true]) {
+  BACKGROUNDS.apartment(ctx, { light, care, dusty, dark }, 1234);
 }
 
 let seed = 777;

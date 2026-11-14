@@ -4,7 +4,8 @@
 // Scene schema (see js/story/*.js):
 //   type:     'title' | 'card' | 'dialogue' (default) | 'ending'
 //   text:     card text, string or fn(state)
-//   bg:       background key; bgVariant: string or fn(state)
+//   bg:       background key; bgVariant: value or fn(state), read once when
+//             the scene starts and kept in `player.bgVariant`
 //   cast:     [{ who, x, pose?, prop?, when? }]
 //   lines:    [{ who, text, pose?, prop?, effects?, set?, when? }]
 //   choices:  [{ text, effects?, set?, next, when? }]
@@ -57,6 +58,8 @@ export class ScenePlayer {
       this.props[member.who] = member.prop ?? null;
     }
     if (scene.enter) this.applyChange(scene.enter);
+    // Fixed for the whole scene: a room does not rearrange itself mid-sentence.
+    this.bgVariant = this.resolve(scene.bgVariant);
 
     const type = scene.type ?? 'dialogue';
     if (type === 'title' || type === 'card') {

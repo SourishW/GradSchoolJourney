@@ -1,6 +1,8 @@
 // Arrival. Two choices that echo through the whole game: does she go to the
 // social (friends), and does she pick the violin back up (life beyond lab)?
 
+import { bedroom } from '../backgrounds/apartment.js';
+
 export const prologue = {
   title: { type: 'title', next: 'card_first_week' },
 
@@ -83,7 +85,7 @@ export const prologue = {
   alone_evening: {
     bg: 'apartment',
     lesson: 'build_relationships',
-    bgVariant: 'night',
+    bgVariant: bedroom(),
     cast: [{ who: 'amara', x: 384 }],
     lines: [
       { who: 'narrator', text: 'She reads three papers. She understands one and a half of them.' },

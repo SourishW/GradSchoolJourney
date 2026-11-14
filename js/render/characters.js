@@ -5,7 +5,7 @@ import { characterSprite, CAST } from '../sprites/cast.js';
 import { PROPS } from '../sprites/props.js';
 import { SPRITE_WIDTH, SPRITE_HEIGHT } from '../sprites/humanoid.js';
 import { rasterize } from '../sprites/pixel_sprite.js';
-import { LOW_STAMINA } from '../engine/stats.js';
+import { LOW_STAMINA, GLAD_HAPPINESS, LOW_HAPPINESS } from '../engine/stats.js';
 import { idleMotion } from './idle.js';
 
 // 64x116 sprite -> 96x174 on the 768x432 stage. The canvas itself is twice
@@ -22,8 +22,6 @@ function propSprite(name) {
 
 // Amara's resting face follows the Happiness bar; everyone else's 'idle' is
 // the soft default smile.
-const GLAD_HAPPINESS = 7;
-const LOW_HAPPINESS = 2;
 
 export function moodPose(who, pose, stats) {
   if (who !== 'amara' || pose !== 'idle') return pose;

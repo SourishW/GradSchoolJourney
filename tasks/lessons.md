@@ -38,4 +38,7 @@ Rules learned from corrections on this project. Read at the start of a session.
   frame. Delay the load event (a slow image from a local server) to capture
   the canvas.
 - `pkill -f <pattern>` also matches the shell running it. Use
-  `pgrep -f "[x]pattern" | xargs -r kill`.
+  `pgrep -f "[x]pattern" | xargs -r kill`, and only in a command that does
+  not spell the plain pattern anywhere else (the `[x]` trick fails if the same
+  command line also starts the server by name). Simpler: start the server as
+  a background task and stop it by task.

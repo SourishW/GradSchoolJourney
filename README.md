@@ -64,6 +64,20 @@ Branching is driven by flags (friends, violin, planned, mistake, fabricated,
 reachedOut, ...), not by the bars, so the bars are feedback rather than gates
 — except Stamina, which gates the tired options.
 
+The bars also show in the picture. Amara's resting face follows Happiness, and
+so does her bedroom (`bedroom()` in `js/backgrounds/apartment.js`):
+
+| Happiness | Bedroom |
+|---|---|
+| 7 or more | tidy: bed made, string lights on |
+| 3 to 6 | lived-in: blanket turned back, a manga on the bed, a cardigan over the footboard |
+| 2 or less | messy: blanket on the floor, clothes and manga strewn about, lights off |
+
+Dust and a cobweb appear when Stress is 7 or more. A scene can ask for at
+least some neglect whatever the bars say (`bedroom({ dusty: true })` in
+deadline week), but never for less. The room is worked out once when a scene
+starts, so it does not change mid-conversation.
+
 ## Rendering
 
 Stage is 768x432 logical pixels on a 1536x864 canvas. Characters are a

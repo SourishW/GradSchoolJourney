@@ -13,7 +13,7 @@ import { drawTitleScreen } from './render/title_screen.js';
 import { drawEndingScreen } from './render/ending_screen.js';
 
 // The stage is 768x432 logical pixels. Backgrounds are authored on a
-// 384x216 grid and drawn at 2x; sprites are 32x58 drawn at 3x.
+// 384x216 grid and drawn at 2x; sprites are 64x116 drawn at 1.5x.
 const LOGICAL_WIDTH = 768;
 const LOGICAL_HEIGHT = 432;
 const BACKGROUND_SCALE = 2;
@@ -91,7 +91,7 @@ function render(now) {
   if (!paintBackground) throw new Error(`scene '${player.sceneId}' has unknown bg '${player.scene.bg}'`);
   ctx.save();
   ctx.scale(BACKGROUND_SCALE, BACKGROUND_SCALE);
-  paintBackground(ctx, player.resolve(player.scene.bgVariant), now);
+  paintBackground(ctx, player.bgVariant, now);
   ctx.restore();
   drawCharacters(ctx, player, LOGICAL_WIDTH, idleClock);
   drawHud(ctx, player);

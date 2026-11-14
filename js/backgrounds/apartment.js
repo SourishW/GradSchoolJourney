@@ -3,16 +3,45 @@
 // cat on the windowsill, cup noodles by the laptop. Her violin lies in its
 // case under the bed.
 //
-// Variants:
-//   'night'  (default) lamp on, string lights twinkling, laptop open
-//   'day'    daylight in the window
-//   'dusty'  the lonely days: laptop shut, lights off, takeout boxes, tissues,
-//            dust on the violin case
+// The room shows how she is doing. It is described by
+//   light  'night' (default) | 'day'
+//   care   'tidy'   bed made, plush on the pillow, string lights on
+//          'lived'  blanket turned back, a manga left on the bed, a cardigan
+//                   over the footboard, a mug on the desk
+//          'messy'  blanket dragged onto the floor, clothes and manga on the
+//                   floor, takeout on the desk, a poster corner come untaped,
+//                   string lights off
+//   dusty  dust on the violin case and every flat surface, a cobweb
+//   dark   lamp off and laptop shut: nobody is really living here
+// A scene does not pick these itself: it writes `bgVariant: bedroom()` and the
+// room follows her bars (see `bedroom` below).
 //
 // Painted on the 384x216 background grid. Characters stand with their feet at
 // y=146 and usually at x=192, so the detail sits to either side of the centre.
+// The HUD covers the top-left corner and the dialogue box everything below
+// y=162.
+
+import { GLAD_HAPPINESS, LOW_HAPPINESS, HIGH_STRESS } from '../engine/stats.js';
 
 const FLOOR_TOP = 118;
+
+const CARE = ['tidy', 'lived', 'messy'];   // in order of neglect
+
+// The `bgVariant` for a bedroom scene. Mess follows Happiness, with the same
+// thresholds as Amara's face; dust follows Stress. `atLeast` is the least
+// neglect the script calls for ({ care, dusty, dark }); the bars can make the
+// room worse than that but not better.
+export function bedroom(atLeast = {}) {
+  return ({ stats }) => {
+    const mood = stats.happiness >= GLAD_HAPPINESS ? 'tidy' : stats.happiness <= LOW_HAPPINESS ? 'messy' : 'lived';
+    return {
+      light: atLeast.light ?? 'night',
+      care: CARE[Math.max(CARE.indexOf(mood), CARE.indexOf(atLeast.care ?? 'tidy'))],
+      dusty: Boolean(atLeast.dusty) || stats.stress >= HIGH_STRESS,
+      dark: Boolean(atLeast.dark),
+    };
+  };
+}
 
 // --- tiny pixel pictures --------------------------------------------------------
 
@@ -146,28 +175,37 @@ const ROBOT_FIGURE = [  // and a toy robot beside it
 
 // --- the room ---------------------------------------------------------------------
 
-export function drawApartment(ctx, variant, timeMs) {
-  const night = variant !== 'day';
-  const dusty = variant === 'dusty';
+export function drawApartment(ctx, room, timeMs) {
+  const { light = 'night', care = 'tidy', dusty = false, dark = false } = room ?? {};
+  const night = light !== 'day';
+  const messy = care === 'messy';
+  const wall = night ? '#5a4660' : '#f7e6c4';
   const rect = (color, x, y, w, h) => { ctx.fillStyle = color; ctx.fillRect(x, y, w, h); };
 
   // Walls and floor.
-  rect(night ? '#5a4660' : '#f7e6c4', 0, 0, 384, FLOOR_TOP);
+  rect(wall, 0, 0, 384, FLOOR_TOP);
   rect(night ? '#4a3850' : '#e6cfa6', 0, FLOOR_TOP - 4, 384, 4);            // skirting board
   rect(night ? '#6a4a36' : '#c0885a', 0, FLOOR_TOP, 384, 98);
   ctx.fillStyle = night ? '#7a5a44' : '#d49a6a';
   for (let x = 0; x < 384; x += 32) ctx.fillRect(x, FLOOR_TOP, 1, 98);
 
-  paintStringLights(ctx, rect, timeMs, !dusty);
+  paintStringLights(ctx, rect, timeMs, !messy && !dark);
   paintWindow(ctx, rect, night, timeMs);
-  if (night && !dusty) paintLampGlow(ctx);
-  paintPosters(ctx, rect);
+  if (night && !dark) paintLampGlow(ctx);
+  paintPosters(ctx, rect, messy ? wall : null);
   paintWallScroll(ctx, rect);
   paintBookshelf(ctx, rect);
-  paintBed(ctx, rect, dusty);
-  paintDesk(ctx, rect, night, dusty);
+  paintBed(ctx, rect, care, dusty);
+  paintDesk(ctx, rect, night, care, dark);
   paintCorner(ctx, rect);
-  paintFloorThings(ctx, rect, dusty);
+  paintFloorThings(ctx, rect, messy);
+  if (dark) rect('rgba(12, 8, 34, 0.24)', 0, 0, 384, 216);                   // only the window lights the room
+  if (dusty) paintDust(ctx, rect, timeMs);
+}
+
+// A run of single pixels: `length` across, climbing or falling by `slope`.
+function stroke(rect, color, x, y, length, slope = 0) {
+  for (let step = 0; step < length; step++) rect(color, x + step, y + Math.round(step * slope), 1, 1);
 }
 
 // A sagging string of bulbs across the top of the wall.
@@ -228,8 +266,9 @@ function paintLampGlow(ctx) {
   ctx.fillRect(292, 52, 80, 66);
 }
 
-// Taped-up posters over the bed. All original art.
-function paintPosters(ctx, rect) {
+// Taped-up posters over the bed. All original art. `peeledOnto` is the wall
+// colour when a corner of the robot poster has come untaped, else null.
+function paintPosters(ctx, rect, peeledOnto) {
   const tape = (x, y, w) => { rect('#f3e6a8', x - 1, y - 1, 3, 2); rect('#f3e6a8', x + w - 2, y - 1, 3, 2); };
 
   // The magical-girl series she grew up on.
@@ -262,6 +301,15 @@ function paintPosters(ctx, rect) {
   rect('#c0392b', 57, 41, 7, 28);
   write(ctx, ['me', 'ka'], '#fff6e8', 58, 44, true);
   tape(56, 40, 46);
+  if (peeledOnto) {
+    rect(peeledOnto, 99, 39, 4, 2);                                          // the tape has let go
+    for (let row = 0; row < 8; row++) {
+      rect(peeledOnto, 94 + row, 40 + row, 8 - row, 1);                      // bare wall behind the corner
+      rect('#e6dfd0', 94, 40 + row, row, 1);                                 // the corner, folded over
+    }
+    stroke(rect, '#b9b3a6', 94, 48, 8);
+    stroke(rect, 'rgba(0, 0, 0, 0.25)', 94, 49, 9);
+  }
 
   // A cat mascot print.
   rect('#f4f0e8', 56, 74, 20, 18);
@@ -326,7 +374,10 @@ function paintBookshelf(ctx, rect) {
   stamp(ctx, ROBOT_FIGURE, { r: '#d6336c', g: '#c8ccd8', c: '#6fe3ff', b: '#3d4f9a', y: '#f2c94c', k: '#2a2230' }, 144, 44);
 }
 
-function paintBed(ctx, rect, dusty) {
+const BLANKET = '#8e5fc0', BLANKET_LIGHT = '#b48ae0', BLANKET_DARK = '#7a4fac', BLANKET_STARS = '#d9c2f2';
+const PLUSH_CAT_COLORS = { w: '#f7f3ea', k: '#2a2230', p: '#ff8fb8' };
+
+function paintBed(ctx, rect, care, dusty) {
   rect('#231a24', 17, 130, 100, 16);                                         // the dark under the bed
   paintViolinCase(ctx, rect, dusty);
   rect('#5a3a2a', 12, 86, 6, 60);                                            // headboard
@@ -335,14 +386,91 @@ function paintBed(ctx, rect, dusty) {
   rect('#5a3a2a', 12, 124, 108, 6);                                          // rail
   rect('#6f4a36', 12, 124, 108, 1);
   rect('#efe7da', 18, 110, 98, 14);                                          // mattress
-  rect('#f7f3ea', 20, 100, 26, 11); rect('#dcd4c6', 20, 109, 26, 2);         // pillow
-  rect('#8e5fc0', 48, 106, 68, 20);                                          // blanket
-  rect('#b48ae0', 48, 106, 68, 5);
-  rect('#7a4fac', 48, 124, 68, 2);
-  ctx.fillStyle = '#d9c2f2';
-  for (let index = 0; index < 9; index++) ctx.fillRect(54 + ((index * 23) % 58), 113 + ((index * 5) % 10), 2, 2);   // stars on the blanket
-  stamp(ctx, PLUSH_CAT, { w: '#f7f3ea', k: '#2a2230', p: '#ff8fb8' }, 30, 91);
+  BEDDING[care](ctx, rect);
 }
+
+function blanketStars(ctx, left, width) {
+  ctx.fillStyle = BLANKET_STARS;
+  for (let index = 0; index < 9; index++) {
+    const x = 54 + ((index * 23) % 58);
+    if (x >= left && x < left + width - 2) ctx.fillRect(x, 113 + ((index * 5) % 10), 2, 2);
+  }
+}
+
+// How the bed has been left, by level of care.
+const BEDDING = {
+  // Made, with the cat plush sitting on the pillow.
+  tidy(ctx, rect) {
+    rect('#f7f3ea', 20, 100, 26, 11); rect('#dcd4c6', 20, 109, 26, 2);       // pillow
+    rect(BLANKET, 48, 106, 68, 20);
+    rect(BLANKET_LIGHT, 48, 106, 68, 5);
+    rect(BLANKET_DARK, 48, 124, 68, 2);
+    blanketStars(ctx, 48, 68);
+    stamp(ctx, PLUSH_CAT, PLUSH_CAT_COLORS, 30, 91);
+  },
+
+  // Slept in and not made: the blanket turned back, a manga left open on it,
+  // a cardigan over the footboard.
+  lived(ctx, rect) {
+    rect('#f7f3ea', 20, 100, 26, 11); rect('#dcd4c6', 20, 109, 26, 2);       // pillow, dented
+    rect('#dcd4c6', 28, 103, 9, 1); rect('#dcd4c6', 30, 104, 5, 1);
+    rect(BLANKET, 48, 106, 68, 20);
+    rect(BLANKET_LIGHT, 48, 106, 68, 5);
+    rect(BLANKET_DARK, 48, 124, 68, 2);
+    blanketStars(ctx, 48, 68);
+    for (let row = 0; row < 14; row++) {                                     // the corner turned back
+      rect('#efe7da', 48, 106 + row, 14 - row, 1);
+      rect(BLANKET_STARS, 62 - row, 106 + row, 7, 1);
+      rect(BLANKET_DARK, 69 - row, 106 + row, 1, 1);
+    }
+    stroke(rect, BLANKET_DARK, 78, 114, 9, 0.5); stroke(rect, BLANKET_DARK, 84, 119, 7, -0.4);   // creases
+    stroke(rect, BLANKET_DARK, 104, 110, 8, 0.6);
+    rect('#f7f3ea', 91, 112, 13, 2);                                         // a manga, face down
+    rect('#f2c94c', 90, 109, 15, 3); rect('#c9a23a', 97, 108, 1, 5); rect('#d6336c', 92, 110, 4, 1);
+    stamp(ctx, PLUSH_CAT, PLUSH_CAT_COLORS, 30, 91);
+    rect('#3bb3a8', 111, 108, 12, 17);                                       // cardigan over the footboard
+    rect('#62cdc2', 111, 108, 12, 2);
+    rect('#2a8a82', 116, 110, 1, 15); rect('#2a8a82', 111, 123, 12, 2);
+    rect('#3bb3a8', 108, 114, 3, 14); rect('#2a8a82', 108, 126, 3, 2);       // a sleeve hanging
+  },
+
+  // Not made in days: the blanket in a heap at the foot and trailing onto the
+  // floor, the sheet wrinkled, the pillow shoved aside, the plush fallen out.
+  messy(ctx, rect) {
+    for (const [x, y, length, slope] of [[24, 114, 10, 0.4], [40, 118, 12, -0.3], [52, 113, 9, 0.5], [60, 120, 10, -0.2], [30, 121, 8, 0.2]]) {
+      stroke(rect, '#cfc6b6', x, y, length, slope);                          // wrinkles in the sheet
+    }
+    for (let row = 0; row < 12; row++) rect(row < 10 ? '#f7f3ea' : '#dcd4c6', 33 - Math.floor(row / 3), 99 + row, 25, 1);   // pillow, askew
+    stroke(rect, '#dcd4c6', 38, 102, 9, 0.4); stroke(rect, '#dcd4c6', 44, 106, 6, -0.3);
+
+    // Shoved to the foot of the bed: the near edge runs back diagonally, and
+    // what was pushed up bunches into two low lumps.
+    for (let row = 0; row < 20; row++) {
+      const left = 80 - Math.round(row * 1.4);
+      rect(BLANKET, left, 106 + row, 116 - left, 1);
+      rect(BLANKET_LIGHT, left, 106 + row, 3, 1);
+    }
+    rect(BLANKET, 83, 104, 17, 2); rect(BLANKET, 87, 103, 9, 1); rect(BLANKET, 103, 103, 12, 3); rect(BLANKET, 106, 102, 7, 1);
+    rect(BLANKET_LIGHT, 83, 104, 4, 1); rect(BLANKET_LIGHT, 87, 103, 9, 1); rect(BLANKET_LIGHT, 103, 103, 3, 1); rect(BLANKET_LIGHT, 106, 102, 7, 1);
+    rect(BLANKET_DARK, 54, 124, 62, 2);
+    for (const [x, y, length, slope] of [[88, 108, 10, 0.5], [100, 106, 9, 0.7], [76, 117, 14, 0.3], [98, 117, 12, -0.3], [66, 122, 9, -0.2]]) {
+      stroke(rect, BLANKET_DARK, x, y, length, slope);                       // folds
+    }
+    blanketStars(ctx, 84, 32);
+    rect(BLANKET, 92, 124, 23, 22);                                          // one end hanging over the rail
+    rect(BLANKET_DARK, 92, 124, 1, 22);
+    rect(BLANKET_DARK, 97, 127, 1, 18); rect(BLANKET_DARK, 104, 123, 1, 21); rect(BLANKET_DARK, 110, 128, 1, 17);
+    rect(BLANKET_LIGHT, 99, 126, 1, 16); rect(BLANKET_LIGHT, 106, 125, 1, 18);
+    rect('rgba(0, 0, 0, 0.3)', 84, 151, 40, 1);                              // and pooled on the floor
+    rect(BLANKET, 88, 145, 32, 3); rect(BLANKET, 85, 147, 38, 4);
+    rect(BLANKET_LIGHT, 85, 147, 4, 1); rect(BLANKET_LIGHT, 119, 147, 4, 1); rect(BLANKET_DARK, 85, 150, 38, 1);
+    stroke(rect, BLANKET_DARK, 90, 147, 6, 0.3); stroke(rect, BLANKET_DARK, 108, 148, 8, -0.2);
+    rect(BLANKET_STARS, 100, 135, 2, 2); rect(BLANKET_STARS, 112, 141, 2, 2); rect(BLANKET_STARS, 94, 148, 2, 2);
+
+    rect('rgba(0, 0, 0, 0.3)', 21, 158, 12, 1);                              // the plush, on the floor on its head
+    stamp(ctx, [...PLUSH_CAT].reverse(), PLUSH_CAT_COLORS, 22, 148);
+  },
+};
 
 // Her violin, in its case, where it has been for six years. The case is
 // shaped to the instrument: two bouts, a waist, a long neck.
@@ -360,11 +488,12 @@ function paintViolinCase(ctx, rect, dusty) {
     rect('rgba(214, 208, 200, 0.5)', 31, 133, 24, 3); rect('rgba(214, 208, 200, 0.5)', 64, 134, 14, 3); rect('rgba(214, 208, 200, 0.5)', 80, 137, 18, 2);
     ctx.fillStyle = 'rgba(214, 208, 200, 0.7)';
     for (let index = 0; index < 12; index++) ctx.fillRect(32 + ((index * 17) % 60), 137 + ((index * 3) % 5), 1, 1);
+    for (const [x, y] of [[19, 143], [84, 143]]) { rect('#8a8494', x, y, 5, 2); rect('#a8a2b0', x + 1, y - 1, 3, 1); }   // dust bunnies
   }
 }
 
 // The desk under the window: laptop, cup noodles, a pile of manga, a lamp.
-function paintDesk(ctx, rect, night, dusty) {
+function paintDesk(ctx, rect, night, care, dark) {
   rect('#4a3220', 238, 106, 4, 40); rect('#4a3220', 340, 106, 4, 40);        // legs
   rect('#5f4129', 304, 108, 34, 38);                                         // drawers
   rect('#4a3220', 304, 120, 34, 1); rect('#4a3220', 304, 133, 34, 1);
@@ -372,18 +501,23 @@ function paintDesk(ctx, rect, night, dusty) {
   rect('#6b4a30', 234, 100, 112, 6);
   rect('#7f5a3c', 234, 100, 112, 1);
 
-  if (dusty) {
+  if (dark) {
     rect('#2a2a33', 268, 97, 34, 3);                                         // laptop, shut
     rect('#3c3c48', 268, 97, 34, 1);
-    rect('#f7f3ea', 244, 92, 10, 8); rect('#d9d2c2', 244, 92, 10, 2); rect('#d6336c', 247, 95, 4, 3);   // takeout boxes
-    rect('#f7f3ea', 256, 94, 8, 6); rect('#d9d2c2', 256, 94, 8, 2);
   } else {
     rect('#2a2a33', 270, 82, 32, 17);                                        // laptop, open
     rect(night ? '#6fb1ff' : '#a8dcff', 272, 84, 28, 13);
     rect('rgba(255,255,255,0.45)', 274, 86, 12, 1); rect('rgba(255,255,255,0.3)', 274, 89, 18, 1); rect('rgba(255,255,255,0.3)', 274, 92, 9, 1);
     rect('#2a2a33', 268, 99, 36, 2);
-    rect('#f7f3ea', 245, 92, 8, 8); rect('#d6336c', 245, 94, 8, 2); rect('#f7f3ea', 244, 91, 10, 1);    // cup noodles
-    rect('#8a5a30', 250, 86, 1, 6); rect('#8a5a30', 252, 85, 1, 7);          // chopsticks standing in the cup
+  }
+  rect('#f7f3ea', 245, 92, 8, 8); rect('#d6336c', 245, 94, 8, 2); rect('#f7f3ea', 244, 91, 10, 1);      // cup noodles
+  rect('#8a5a30', 250, 86, 1, 6); rect('#8a5a30', 252, 85, 1, 7);            // chopsticks standing in the cup
+  if (care === 'lived') {
+    rect('#8fd3ff', 258, 94, 6, 6); rect('#6fb1df', 258, 98, 6, 2); rect('#8fd3ff', 264, 95, 1, 3);     // a mug
+  }
+  if (care === 'messy') {
+    rect('#f7f3ea', 256, 93, 9, 7); rect('#d9d2c2', 256, 93, 9, 2); rect('#d6336c', 259, 96, 3, 3);     // a takeout box
+    rect('#f7f3ea', 235, 96, 8, 4); rect('#d6336c', 239, 96, 2, 4); rect('#d9d2c2', 235, 96, 1, 4);     // an empty pot, on its side
   }
   rect('#d6336c', 306, 97, 16, 3); rect('#f7f3ea', 306, 98, 16, 1);          // manga, stacked flat
   rect('#2c5fd6', 307, 94, 15, 3); rect('#f7f3ea', 307, 95, 15, 1);
@@ -392,7 +526,7 @@ function paintDesk(ctx, rect, night, dusty) {
   rect('#3a3a48', 329, 98, 10, 2);                                           // desk lamp
   rect('#3a3a48', 333, 85, 2, 13);
   rect('#4d4d5e', 326, 80, 14, 5); rect('#4d4d5e', 328, 79, 10, 1);
-  rect(night && !dusty ? '#ffe9a8' : '#8a8494', 328, 85, 10, 1);
+  rect(night && !dark ? '#ffe9a8' : '#8a8494', 328, 85, 10, 1);
 }
 
 // The corner by the window: one more poster, a cube shelf with the console.
@@ -422,7 +556,7 @@ function paintCorner(ctx, rect) {
   stamp(ctx, PLUSH_FOX, { o: '#f08a3c', w: '#fff6e8', k: '#2a2230' }, 359, 107);
 }
 
-function paintFloorThings(ctx, rect, dusty) {
+function paintFloorThings(ctx, rect, messy) {
   rect('#b5544a', 150, 149, 92, 13);                                         // rug
   rect('#f3ead8', 150, 151, 92, 1); rect('#f3ead8', 150, 159, 92, 1);
   rect('#d97a6c', 150, 154, 92, 3);
@@ -430,8 +564,59 @@ function paintFloorThings(ctx, rect, dusty) {
   for (let y = 149; y < 162; y += 2) { ctx.fillRect(148, y, 2, 1); ctx.fillRect(242, y, 2, 1); }   // fringe
   rect('#ff8fb8', 124, 149, 7, 3); rect('#ff8fb8', 133, 150, 7, 3);          // slippers
   rect('#e06a98', 124, 151, 7, 1); rect('#e06a98', 133, 152, 7, 1);
-  if (dusty) {
-    ctx.fillStyle = '#f7f3ea';                                               // tissues
-    for (const [x, y] of [[104, 150], [112, 154], [226, 147], [143, 156], [98, 157]]) { ctx.fillRect(x, y, 3, 2); ctx.fillRect(x + 1, y - 1, 2, 1); }
+  if (!messy) return;
+
+  rect('rgba(0, 0, 0, 0.3)', 55, 157, 26, 1);                                // a heap of clothes
+  rect('#3bb3a8', 58, 150, 18, 7); rect('#3bb3a8', 61, 148, 10, 2); rect('#62cdc2', 61, 148, 10, 1);
+  rect('#2a8a82', 58, 155, 18, 2); rect('#2a8a82', 66, 150, 1, 5);
+  rect('#f2a33c', 68, 152, 12, 5); rect('#f7c46c', 68, 152, 12, 1); rect('#c9822a', 68, 156, 12, 1);
+  rect('#f7f3ea', 84, 155, 6, 2); rect('#f7f3ea', 88, 152, 2, 3); rect('#d6336c', 88, 152, 2, 1);      // a sock
+
+  // Manga left where it was dropped: [x, y, cover, lying open].
+  for (const [x, y, cover, open] of [[142, 156, '#2c5fd6', false], [224, 149, '#d6336c', true], [252, 150, '#f2c94c', false], [264, 156, '#2f9e63', true], [300, 150, '#8e5fc0', false]]) {
+    rect('rgba(0, 0, 0, 0.3)', x, y + 4, open ? 11 : 7, 1);
+    if (open) {
+      rect('#f7f3ea', x, y, 11, 4); rect(cover, x, y + 3, 11, 1); rect('#b9b3a6', x + 5, y, 1, 4);
+      rect('#8a8494', x + 1, y + 1, 3, 1); rect('#8a8494', x + 7, y + 1, 3, 1);
+    } else {
+      rect(cover, x, y, 7, 4); rect('#f7f3ea', x + 1, y + 1, 4, 1); rect('#f7f3ea', x, y + 3, 7, 1);
+    }
+  }
+  rect('#f7f3ea', 284, 151, 8, 4); rect('#d6336c', 286, 151, 2, 4); rect('#33241a', 291, 152, 1, 2);   // an empty pot
+  ctx.fillStyle = '#f7f3ea';                                                 // tissues
+  for (const [x, y] of [[126, 157], [146, 147], [234, 158], [276, 148], [44, 150], [312, 156]]) { ctx.fillRect(x, y, 3, 2); ctx.fillRect(x + 1, y - 1, 2, 1); }
+}
+
+// Nobody has cleaned: a film on every flat surface, a cobweb in the corner of
+// the ceiling, motes hanging in the air. (The violin case carries its own.)
+function paintDust(ctx, rect, timeMs) {
+  const FILM = 'rgba(222, 216, 208, 0.5)';
+  rect(FILM, 124, 52, 36, 1);                                                // bookshelf and its figures
+  rect(FILM, 131, 43, 3, 1); rect(FILM, 146, 46, 3, 1);
+  rect(FILM, 178, 21, 28, 1);                                                // scroll rod
+  rect(FILM, 248, 86, 88, 1);                                                // windowsill
+  rect(FILM, 234, 100, 112, 1);                                              // desk
+  rect(FILM, 348, 118, 32, 1);                                               // cube shelf
+  rect(FILM, 12, 86, 6, 1);                                                  // headboard
+  rect('#8a8494', 162, 147, 5, 2); rect('#a8a2b0', 163, 146, 3, 1);          // a dust bunny by the shelf
+
+  // Cobweb: three strands out of the corner, joined by two sagging rings.
+  const WEB = 'rgba(232, 228, 222, 0.6)';
+  const line = (x0, y0, x1, y1) => {
+    const steps = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0));
+    for (let step = 0; step <= steps; step++) rect(WEB, Math.round(x0 + ((x1 - x0) * step) / steps), Math.round(y0 + ((y1 - y0) * step) / steps), 1, 1);
+  };
+  const SPOKES = [[362, 0], [366, 9], [373, 16], [383, 20]];
+  for (const [x, y] of SPOKES) line(383, 0, x, y);
+  for (const reach of [0.5, 0.85]) {
+    const ring = SPOKES.map(([x, y]) => [383 + (x - 383) * reach, y * reach]);
+    for (let index = 1; index < ring.length; index++) line(...ring[index - 1], ...ring[index]);
+  }
+
+  ctx.fillStyle = 'rgba(240, 236, 228, 0.45)';                               // motes, drifting down slowly
+  for (let index = 0; index < 14; index++) {
+    const x = 40 + ((index * 67) % 320) + Math.round(2 * Math.sin(timeMs / 1700 + index));
+    const y = 24 + ((index * 41 + Math.floor(timeMs / 260)) % 116);
+    ctx.fillRect(x, y, 1, 1);
   }
 }

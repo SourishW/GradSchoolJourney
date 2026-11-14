@@ -19,6 +19,12 @@ export function createStats() {
 
 export const LOW_STAMINA = 4; // below this she is 'tired' and the risky options appear
 
+// Where Amara's mood shows: on her face (render/characters.js) and in the
+// state of her bedroom (backgrounds/apartment.js).
+export const GLAD_HAPPINESS = 7; // at or above: she smiles, the room is tidy
+export const LOW_HAPPINESS = 2;  // at or below: she droops, the room is a mess
+export const HIGH_STRESS = 7;    // at or above: nothing has been dusted
+
 // Returns the list of {key, delta} actually applied (after clamping) so the
 // HUD can show toasts.
 export function applyEffects(stats, effects = {}) {
