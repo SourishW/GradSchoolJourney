@@ -21,7 +21,7 @@ export const theDeadline = {
     cast: [{ who: 'amara', x: 384 }],
     lines: [
       { who: 'narrator', text: 'Ten days to the submission. The results are close. Not done. Close.' },
-      { who: 'narrator', text: 'It is 1am. The stamina bar in the corner is not decoration.' },
+      { who: 'narrator', text: 'It is 1am. You can choose to keep working, but your stamina will drop. The bar in the corner is not decoration.' },
     ],
     choices: [
       {

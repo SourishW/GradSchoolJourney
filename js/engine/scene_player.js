@@ -110,7 +110,7 @@ export class ScenePlayer {
     this.shownChars = 0;
     this.typingDone = false;
     this.mode = 'text';
-    this.audio.speak(this.speakerStyle(line.who).pitch);
+    this.wordsSpoken = 0;
     if (line.pose) this.poses[line.who] = line.pose;
     if (line.prop !== undefined) this.props[line.who] = line.prop;
     this.applyChange(line);
@@ -122,7 +122,18 @@ export class ScenePlayer {
 
   update(deltaMs) {
     if (this.mode === 'text' && !this.typingDone) {
+      const before = Math.floor(this.shownChars);
       this.shownChars = Math.min(this.fullText.length, this.shownChars + (deltaMs / 1000) * CHARS_PER_SECOND);
+      const after = Math.floor(this.shownChars);
+      // A word starts at a non-space character that follows a space (or the start).
+      for (let index = before; index < after; index++) {
+        const letter = this.fullText[index];
+        if (letter !== ' ' && (index === 0 || this.fullText[index - 1] === ' ')) {
+          this.audio.word(this.speakerStyle(this.currentLine.who).pitch, this.wordsSpoken);
+          this.wordsSpoken += 1;
+          break; // at most one blip per frame
+        }
+      }
       if (this.shownChars >= this.fullText.length) this.typingDone = true;
     }
     for (const toast of this.toasts) toast.age += deltaMs;
