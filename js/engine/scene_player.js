@@ -110,6 +110,7 @@ export class ScenePlayer {
     this.shownChars = 0;
     this.typingDone = false;
     this.mode = 'text';
+    this.audio.speak(this.speakerStyle(line.who).pitch);
     if (line.pose) this.poses[line.who] = line.pose;
     if (line.prop !== undefined) this.props[line.who] = line.prop;
     this.applyChange(line);
@@ -121,13 +122,7 @@ export class ScenePlayer {
 
   update(deltaMs) {
     if (this.mode === 'text' && !this.typingDone) {
-      const before = Math.floor(this.shownChars);
       this.shownChars = Math.min(this.fullText.length, this.shownChars + (deltaMs / 1000) * CHARS_PER_SECOND);
-      const after = Math.floor(this.shownChars);
-      if (after > before && after % 2 === 0) {
-        const letter = this.fullText[after - 1];
-        if (letter && letter !== ' ') this.audio.blip(this.speakerStyle(this.currentLine.who).pitch);
-      }
       if (this.shownChars >= this.fullText.length) this.typingDone = true;
     }
     for (const toast of this.toasts) toast.age += deltaMs;
