@@ -34,7 +34,7 @@ const { drawDialogueBox, drawCard, drawLessonCard } = await import('../js/render
 const { drawTitleScreen } = await import('../js/render/title_screen.js');
 const { drawEndingScreen } = await import('../js/render/ending_screen.js');
 
-const audio = { word() {}, tick() {}, confirm() {}, chord() {} };
+const audio = { syllable() {}, tick() {}, confirm() {}, chord() {} };
 const ctx = stubContext();
 
 function renderFrame(player, now) {

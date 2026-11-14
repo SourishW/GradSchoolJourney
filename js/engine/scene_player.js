@@ -15,6 +15,7 @@ import { createStats, applyEffects } from './stats.js';
 import { CAST, SPEAKER_STYLE } from '../sprites/cast.js';
 import { computeEnding } from '../story/endings.js';
 import { LESSONS } from '../story/lessons.js';
+import { syllableOnsets } from './syllables.js';
 
 const CHARS_PER_SECOND = 45;
 const TOAST_LIFETIME_MS = 1800;
@@ -110,7 +111,8 @@ export class ScenePlayer {
     this.shownChars = 0;
     this.typingDone = false;
     this.mode = 'text';
-    this.wordsSpoken = 0;
+    this.syllablesSpoken = 0;
+    this.syllableOnsets = syllableOnsets(this.fullText);
     if (line.pose) this.poses[line.who] = line.pose;
     if (line.prop !== undefined) this.props[line.who] = line.prop;
     this.applyChange(line);
@@ -125,12 +127,11 @@ export class ScenePlayer {
       const before = Math.floor(this.shownChars);
       this.shownChars = Math.min(this.fullText.length, this.shownChars + (deltaMs / 1000) * CHARS_PER_SECOND);
       const after = Math.floor(this.shownChars);
-      // A word starts at a non-space character that follows a space (or the start).
+      // One blip per syllable, as the typewriter reaches it.
       for (let index = before; index < after; index++) {
-        const letter = this.fullText[index];
-        if (letter !== ' ' && (index === 0 || this.fullText[index - 1] === ' ')) {
-          this.audio.word(this.speakerStyle(this.currentLine.who).pitch, this.wordsSpoken);
-          this.wordsSpoken += 1;
+        if (this.syllableOnsets.has(index)) {
+          this.audio.syllable(this.speakerStyle(this.currentLine.who).pitch, this.syllablesSpoken);
+          this.syllablesSpoken += 1;
           break; // at most one blip per frame
         }
       }

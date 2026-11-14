@@ -1,5 +1,5 @@
-// Tiny WebAudio synth: one soft voice blip per spoken word, a tick for menu
-// moves, and a short chord for endings. The context is created on the first user
+// Tiny WebAudio synth: one soft voice blip per spoken syllable, a tick for
+// menu moves, and a short chord for endings. The context is created on the first user
 // gesture because browsers refuse to start audio before one.
 
 export class GameAudio {
@@ -41,13 +41,14 @@ export class GameAudio {
     oscillator.stop(now + durationSeconds);
   }
 
-  // One blip per word as the typewriter reaches it; `wordIndex` alternates a
-  // little pitch wobble so a sentence does not sound like a metronome.
-  word(pitch, wordIndex) {
+  // One blip per syllable as the typewriter reaches it; `syllableIndex`
+  // alternates a little pitch wobble so a sentence does not sound like a
+  // metronome. Shorter than the per-word blip since they come faster.
+  syllable(pitch, syllableIndex) {
     if (!this.context || this.muted || pitch <= 0) return;
     const VOICE_PITCH_SCALE = 0.6; // speaker pitches were tuned for a square wave; sine sits lower
-    const wobble = 1 + (wordIndex % 2 === 0 ? 0.03 : -0.04);
-    this.tone(pitch * VOICE_PITCH_SCALE * wobble, 0.1, 'sine', 0.07, 900);
+    const wobble = 1 + (syllableIndex % 3 === 0 ? 0.04 : syllableIndex % 3 === 1 ? -0.03 : 0.01);
+    this.tone(pitch * VOICE_PITCH_SCALE * wobble, 0.07, 'sine', 0.06, 900);
   }
 
   tick() {
