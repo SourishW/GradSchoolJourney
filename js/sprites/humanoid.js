@@ -13,14 +13,14 @@
 //   J bottom j bottom light V bottom shade
 //   b shoes  B shoe shade   n sole and laces
 //   W shirt  N shirt shade  X accent   C accent light   x accent shade
-//   e eye white i iris  p pupil  w glint   m lip line  M lower lip  t tear
+//   e eye white i iris  p pupil  w glint   m mouth line  t tear
 //   f glasses   G cap   g cap top   y gold (tassel, jewellery, buttons)
 //   O o Q violin wood   l strings and bow hair   d bow stick   k hard line
 
 import { createLayer } from './painter.js';
 import { softOutline } from './soft_outline.js';
 import { mix, shade } from './color.js';
-import { WIDTH, HEIGHT, LINE_STRENGTH, paintBody, paintViolin } from './humanoid_body.js';
+import { WIDTH, HEIGHT, LINE_STRENGTH, paintBody, paintInFront } from './humanoid_body.js';
 import {
   headLayer, paintFace, paintGlasses, paintEarrings, paintHair, paintFlyaways,
   shadeUnderFringe, beanieLayer, capLayer, isHair, CAP_CLEAR_ROWS,
@@ -52,32 +52,37 @@ const SHORTEN_ROWS = [98, 82, 100, 80, 96, 84, 94, 86];
 export function humanoid(spec) {
   const colors = paletteFor(spec);
   const main = createLayer(WIDTH, HEIGHT);
-  const outlined = (part, keep) => { softOutline(part.cells, colors, { strength: LINE_STRENGTH, keep }); main.stamp(part); };
+  const outline = (part, keep) => { softOutline(part.cells, colors, { strength: LINE_STRENGTH, keep }); return part; };
   const wears = (name) => (spec.accessories ?? []).includes(name);
+  // The head, with everything on it, can sit a pixel or two off its resting
+  // place (a nod, a hung head) without the body being redrawn.
+  const headDx = spec.headTilt ?? 0, headDy = spec.headDrop ?? 0;
+  const sway = spec.sway ?? 0;
 
   const hairBack = createLayer(WIDTH, HEIGHT);
   const hairFront = createLayer(WIDTH, HEIGHT);
-  paintHair(spec.hairStyle, hairBack, hairFront);
+  paintHair(spec.hairStyle, hairBack, hairFront, sway);
   hairBack.rim('A', 'a', 'right', 2, 1);
-  main.stamp(hairBack);
+  if (spec.cap) for (const hair of [hairBack, hairFront]) hair.fill(0, 0, WIDTH - 1, CAP_CLEAR_ROWS - 1, '.');
+  main.stampAt(hairBack, headDx, headDy);
 
   paintBody(main, spec, colors);
-  outlined(headLayer());
-  paintFace(main, spec);
-  if (wears('earrings')) paintEarrings(main);
+
+  const head = createLayer(WIDTH, HEIGHT);
+  head.stamp(outline(headLayer()));
+  paintFace(head, spec);
+  if (wears('earrings')) paintEarrings(head);
   // Hair gets a line where it crosses skin or clothes, not where it lies on
   // more hair.
-  outlined(hairFront, (x, y, nx, ny) => !isHair(main.get(nx, ny)));
-  shadeUnderFringe(main);
-  if (spec.disheveled) paintFlyaways(main);
-  if (spec.glasses) paintGlasses(main, spec.glasses);
-  if (spec.cap) {
-    main.fill(0, 0, WIDTH - 1, CAP_CLEAR_ROWS - 1, '.');
-    outlined(capLayer());
-  } else if (wears('beanie')) {
-    outlined(beanieLayer());
-  }
-  if (spec.arms === 'violin') paintViolin(main, spec, colors);
+  head.stamp(outline(hairFront, (x, y, nx, ny) => !isHair(head.get(nx, ny)) && !isHair(main.get(nx + headDx, ny + headDy))));
+  shadeUnderFringe(head);
+  if (spec.disheveled) paintFlyaways(head);
+  if (spec.glasses) paintGlasses(head, spec.glasses);
+  if (spec.cap) head.stamp(outline(capLayer(sway)));
+  else if (wears('beanie')) head.stamp(outline(beanieLayer()));
+  main.stampAt(head, headDx, headDy);
+
+  paintInFront(main, spec, colors);
 
   shorten(main.cells, spec.shorter ?? 0);
   softOutline(main.cells, colors, { strength: LINE_STRENGTH });
@@ -90,7 +95,6 @@ function paletteFor(spec) {
   const detail = spec.gown ? GOWN.topDetail : spec.topDetail ?? spec.top;
   const accent = spec.gown ? GOWN.trim : spec.accent ?? '#c8553d';
   const shirt = spec.shirt ?? '#f1f1f6';
-  const lips = spec.lips ?? '#8a3a44';
   return {
     ...SHARED_COLORS,
     s: spec.skin, S: spec.skinShade, z: shade(spec.skinShade),
@@ -104,7 +108,7 @@ function paletteFor(spec) {
     X: accent, C: mix(accent, WHITE, 0.22), x: shade(accent),
     e: mix(SHARED_COLORS.e, spec.skin, 0.14),
     i: spec.iris ?? '#4a3020',
-    m: lips, M: mix(lips, spec.skin, 0.45),
+    m: mix(spec.skinShade, '#3a1420', 0.62),   // a dark line in the skin's own hue
   };
 }
 
@@ -117,20 +121,21 @@ function shorten(cells, count) {
   for (let index = 0; index < rows.length; index++) cells.unshift(Array(WIDTH).fill('.'));
 }
 
-// Pose names map to face and arm parameters. 'idle' is the resting face; for
-// Amara the renderer swaps it for 'glad' or 'low' depending on the Happiness
-// bar (see render/characters.js).
+// Pose names map to face and arm parameters, and to the mood that picks the
+// idle animation (see render/idle.js). 'idle' is the resting face; for Amara
+// the renderer swaps it for 'glad' or 'low' depending on the Happiness bar
+// (see render/characters.js).
 export const POSES = {
-  idle:  { eyes: 'open',   mouth: 'soft' },
-  glad:  { eyes: 'open',   mouth: 'smile' },
-  low:   { eyes: 'open',   mouth: 'flat' },
-  happy: { eyes: 'closed_happy', mouth: 'smile' },
-  sad:   { eyes: 'open',   mouth: 'frown', brows: 'sad' },
-  cry:   { eyes: 'closed_sad', mouth: 'frown', brows: 'sad', tears: true },
-  tired: { eyes: 'tired',  mouth: 'flat' },
-  angry: { eyes: 'narrow', mouth: 'frown', brows: 'angry' },
-  kind:  { eyes: 'closed_happy', mouth: 'soft' },
-  shock: { eyes: 'open',   mouth: 'gasp', brows: 'raised' },
-  grad:  { eyes: 'open',   mouth: 'smile', cap: true, gown: true },
-  violin: { eyes: 'closed_happy', mouth: 'smile', arms: 'violin' },
+  idle:  { eyes: 'open',   mouth: 'soft', mood: 'normal' },
+  glad:  { eyes: 'open',   mouth: 'smile', mood: 'happy' },
+  low:   { eyes: 'open',   mouth: 'flat', mood: 'sad' },
+  happy: { eyes: 'closed_happy', mouth: 'smile', mood: 'happy' },
+  sad:   { eyes: 'open',   mouth: 'frown', brows: 'sad', mood: 'sad' },
+  cry:   { eyes: 'closed_sad', mouth: 'frown', brows: 'sad', tears: true, mood: 'sad' },
+  tired: { eyes: 'tired',  mouth: 'flat', mood: 'sad' },
+  angry: { eyes: 'narrow', mouth: 'frown', brows: 'angry', mood: 'tense' },
+  kind:  { eyes: 'closed_happy', mouth: 'soft', mood: 'normal' },
+  shock: { eyes: 'open',   mouth: 'gasp', brows: 'raised', mood: 'excited' },
+  grad:  { eyes: 'open',   mouth: 'smile', cap: true, gown: true, mood: 'happy' },
+  violin: { eyes: 'closed_happy', mouth: 'smile', arms: 'violin', mood: 'playing' },
 };

@@ -5,8 +5,10 @@ import { createLayer } from './painter.js';
 import { baseLetter } from './soft_outline.js';
 import { WIDTH, HEIGHT } from './humanoid_body.js';
 
-// The head is an egg centred on x=32, rows 5..31, tapering to the chin.
-const HEAD = { cx: 32, cy: 18, rx: 12, ry: 13, taper: 0.32 };
+// The head is an oval centred on x=32: a half-ellipse crown (rows 5..18) over
+// full cheeks and a rounded chin (rows 18..32).
+const HEAD = { cx: 32, cy: 18, rx: 12, crown: 13 };
+const JAW = [12, 12, 12, 12, 12, 12, 11, 11, 10, 10, 9, 8, 7, 6, 4]; // half-widths from row cy down
 const BROW_Y = 13;
 const EYE_Y = 17;                 // eyes are 7 wide x 5 tall
 const LEFT_EYE_X = 22;
@@ -19,15 +21,14 @@ const layer = () => createLayer(WIDTH, HEIGHT);
 export const isHair = (letter) => 'AhaI'.includes(baseLetter(letter));
 
 function headHalfWidth(y) {
-  const t = (y - HEAD.cy) / HEAD.ry;
-  let half = HEAD.rx * Math.sqrt(Math.max(0, 1 - t * t));
-  if (t > 0) half = Math.max(half * (1 - HEAD.taper * t * t), t > 0.85 ? 4 : 0);
-  return Math.round(half);
+  if (y >= HEAD.cy) return JAW[y - HEAD.cy] ?? 0;
+  const t = (HEAD.cy - y) / HEAD.crown;
+  return Math.round(HEAD.rx * Math.sqrt(Math.max(0, 1 - t * t)));
 }
 
 export function headLayer() {
   const head = layer();
-  for (let y = HEAD.cy - HEAD.ry; y <= HEAD.cy + HEAD.ry; y++) {
+  for (let y = HEAD.cy - HEAD.crown; y < HEAD.cy + JAW.length; y++) {
     const half = headHalfWidth(y);
     head.row(y, HEAD.cx - half, HEAD.cx + half - 1, 's');
   }
@@ -43,7 +44,7 @@ export function headLayer() {
 export function paintFace(main, spec) {
   const disheveled = Boolean(spec.disheveled);
   paintBrows(main, spec.brows ?? 'none');
-  paintEyes(main, spec.eyes ?? 'open', disheveled);
+  paintEyes(main, spec.blink ? blinkFor(spec.eyes ?? 'open') : spec.eyes ?? 'open', disheveled, spec.gaze === 'away');
   main.px(NOSE.x, NOSE.y, 'S'); main.px(NOSE.x, NOSE.y + 1, 'S'); main.px(NOSE.x - 1, NOSE.y + 1, 'S');
   if (spec.brows !== 'angry' && spec.mouth !== 'frown') {
     main.fill(22, BLUSH_Y, 25, BLUSH_Y, 'r'); main.fill(23, BLUSH_Y + 1, 24, BLUSH_Y + 1, 'r');
@@ -51,11 +52,16 @@ export function paintFace(main, spec) {
   }
   paintMouth(main, spec.mouth ?? 'soft');
   if (spec.tears) {
-    main.fill(23, EYE_Y + 5, 23, EYE_Y + 11, 't'); main.fill(22, EYE_Y + 11, 23, EYE_Y + 12, 't');
-    main.fill(40, EYE_Y + 5, 40, EYE_Y + 11, 't'); main.fill(40, EYE_Y + 11, 41, EYE_Y + 12, 't');
+    // Two frames: the drops run a little further down the cheek on the second.
+    const run = spec.tearFrame ? 2 : 0;
+    main.fill(23, EYE_Y + 5 + run, 23, EYE_Y + 11 + run, 't'); main.fill(22, EYE_Y + 11 + run, 23, EYE_Y + 12 + run, 't');
+    main.fill(40, EYE_Y + 5 + run, 40, EYE_Y + 11 + run, 't'); main.fill(40, EYE_Y + 11 + run, 41, EYE_Y + 12 + run, 't');
     main.px(21, EYE_Y + 4, 't'); main.px(42, EYE_Y + 4, 't');
   }
 }
+
+// A blink only changes eyes that are open to begin with.
+const blinkFor = (eyes) => (eyes === 'closed_happy' || eyes === 'closed_sad' ? eyes : 'blink');
 
 function paintBrows({ px }, brows) {
   const arc = (x0, flip) => {
@@ -69,35 +75,40 @@ function paintBrows({ px }, brows) {
   arc(RIGHT_EYE_X + 1, true);
 }
 
-function paintEyes({ px, fill }, eyes, disheveled) {
+function paintEyes({ px, fill }, eyes, disheveled, gazeAway) {
   for (const x0 of [LEFT_EYE_X, RIGHT_EYE_X]) {
     const x1 = x0 + 6;
+    const iris = gazeAway ? x0 + 1 : x0 + 3;        // the iris is 3 wide; it sits toward where she looks
     switch (eyes) {
       case 'open':
         fill(x0 + 1, EYE_Y, x1 - 1, EYE_Y, 'e');
         fill(x0, EYE_Y + 1, x1, EYE_Y + 3, 'e');
         fill(x0 + 1, EYE_Y + 4, x1 - 1, EYE_Y + 4, 'e');
-        fill(x0 + 3, EYE_Y, x1 - 1, EYE_Y + 3, 'i');
-        fill(x0 + 4, EYE_Y + 1, x1 - 1, EYE_Y + 2, 'p');
-        px(x0 + 3, EYE_Y + 1, 'w'); px(x0 + 4, EYE_Y + 1, 'w'); px(x1 - 1, EYE_Y + 3, 'w');
+        fill(iris, EYE_Y, iris + 2, EYE_Y + 3, 'i');
+        fill(iris + 1, EYE_Y + 1, iris + 2, EYE_Y + 2, 'p');
+        px(iris, EYE_Y + 1, 'w'); px(iris + 1, EYE_Y + 1, 'w'); px(iris + 2, EYE_Y + 3, 'w');
         fill(x0 + 1, EYE_Y - 1, x1 - 1, EYE_Y - 1, 'k');
         px(x0, EYE_Y, 'k'); px(x1, EYE_Y, 'k'); px(x0 - 1, EYE_Y - 1, 'k');
         fill(x0 + 1, EYE_Y + 5, x1 - 1, EYE_Y + 5, 'S');
         break;
       case 'narrow': // angry: lids half down
         fill(x0, EYE_Y + 1, x1, EYE_Y + 3, 'e');
-        fill(x0 + 3, EYE_Y + 1, x1 - 1, EYE_Y + 3, 'i');
-        fill(x0 + 4, EYE_Y + 1, x1 - 1, EYE_Y + 2, 'p');
-        px(x0 + 3, EYE_Y + 1, 'w');
+        fill(iris, EYE_Y + 1, iris + 2, EYE_Y + 3, 'i');
+        fill(iris + 1, EYE_Y + 1, iris + 2, EYE_Y + 2, 'p');
+        px(iris, EYE_Y + 1, 'w');
         fill(x0, EYE_Y, x1, EYE_Y, 'k'); px(x0 - 1, EYE_Y, 'k');
         break;
       case 'tired':
         fill(x0, EYE_Y + 2, x1, EYE_Y + 3, 'e');
         fill(x0 + 1, EYE_Y + 4, x1 - 1, EYE_Y + 4, 'e');
-        fill(x0 + 3, EYE_Y + 2, x1 - 1, EYE_Y + 4, 'i');
-        fill(x0 + 4, EYE_Y + 2, x1 - 1, EYE_Y + 3, 'p');
+        fill(iris, EYE_Y + 2, iris + 2, EYE_Y + 4, 'i');
+        fill(iris + 1, EYE_Y + 2, iris + 2, EYE_Y + 3, 'p');
         fill(x0, EYE_Y + 1, x1, EYE_Y + 1, 'k');
         fill(x0 + 1, EYE_Y + 5, x1 - 1, EYE_Y + 6, 'S');
+        break;
+      case 'blink':                                   // lids down, lashes level
+        fill(x0, EYE_Y + 2, x1, EYE_Y + 2, 'k'); px(x0 - 1, EYE_Y + 1, 'k');
+        fill(x0 + 1, EYE_Y + 3, x1 - 1, EYE_Y + 3, 'S');
         break;
       case 'closed_happy':
         px(x0, EYE_Y + 2, 'k'); px(x0 + 1, EYE_Y + 1, 'k'); fill(x0 + 2, EYE_Y, x1 - 2, EYE_Y, 'k');
@@ -110,34 +121,34 @@ function paintEyes({ px, fill }, eyes, disheveled) {
       default:
         throw new Error(`unknown eyes '${eyes}'`);
     }
-    if (disheveled && eyes !== 'tired') fill(x0 + 1, EYE_Y + 5, x1 - 1, EYE_Y + 6, 'S'); // bags
+    if (disheveled && eyes !== 'tired' && eyes !== 'blink') fill(x0 + 1, EYE_Y + 5, x1 - 1, EYE_Y + 6, 'S'); // bags
   }
 }
 
+// Mouths are a single line: no lips, no shading.
 function paintMouth({ px, fill }, mouth) {
   switch (mouth) {
-    case 'soft':
+    case 'soft':  // the resting face: corners just turned up
       px(29, MOUTH_Y - 1, 'm'); px(34, MOUTH_Y - 1, 'm');
-      fill(30, MOUTH_Y, 33, MOUTH_Y, 'm'); fill(30, MOUTH_Y + 1, 33, MOUTH_Y + 1, 'M');
+      fill(30, MOUTH_Y, 33, MOUTH_Y, 'm');
       break;
     case 'smile':
       px(28, MOUTH_Y - 2, 'm'); px(29, MOUTH_Y - 1, 'm'); px(34, MOUTH_Y - 1, 'm'); px(35, MOUTH_Y - 2, 'm');
       fill(30, MOUTH_Y, 33, MOUTH_Y, 'm');
-      fill(29, MOUTH_Y + 1, 34, MOUTH_Y + 1, 'M'); fill(30, MOUTH_Y + 2, 33, MOUTH_Y + 2, 'M');
       break;
     case 'flat':
-      fill(29, MOUTH_Y, 34, MOUTH_Y, 'm'); fill(30, MOUTH_Y + 1, 33, MOUTH_Y + 1, 'M');
+      fill(29, MOUTH_Y, 34, MOUTH_Y, 'm');
       break;
     case 'frown':
       px(29, MOUTH_Y + 1, 'm'); px(34, MOUTH_Y + 1, 'm');
       fill(30, MOUTH_Y, 33, MOUTH_Y, 'm');
       break;
-    case 'gasp': // wide and shallow, teeth showing
+    case 'gasp': // open: a line round the teeth and the dark of the mouth
       fill(28, MOUTH_Y - 1, 35, MOUTH_Y - 1, 'm');
       fill(29, MOUTH_Y, 34, MOUTH_Y, 'e');
       fill(29, MOUTH_Y + 1, 34, MOUTH_Y + 1, 'k');
-      px(28, MOUTH_Y, 'm'); px(35, MOUTH_Y, 'm');
-      fill(30, MOUTH_Y + 2, 33, MOUTH_Y + 2, 'M');
+      px(28, MOUTH_Y, 'm'); px(35, MOUTH_Y, 'm'); px(28, MOUTH_Y + 1, 'm'); px(35, MOUTH_Y + 1, 'm');
+      fill(29, MOUTH_Y + 2, 34, MOUTH_Y + 2, 'm');
       break;
     default:
       throw new Error(`unknown mouth '${mouth}'`);
@@ -169,8 +180,9 @@ export function paintEarrings(main) {
 // --- hair --------------------------------------------------------------------
 
 // Paints one hairstyle onto two layers: `back` goes behind the body and head,
-// `front` over the face and shoulders.
-export function paintHair(style, back, front) {
+// `front` over the face and shoulders. `sway` (-2..2) swings whatever hangs
+// loose, most at the tips; 0 is the resting shape.
+export function paintHair(style, back, front, sway = 0) {
   // The fringe fills the cap already painted on `back` down to a hairline.
   const fringe = (hairlineAt) => {
     for (let x = 16; x <= 47; x++) {
@@ -192,25 +204,34 @@ export function paintHair(style, back, front) {
       back.ellipse(32, 15, 16, 13, 'A');
       back.fill(17, 15, 46, 37, 'A');
       fringe((x) => (x < 27 ? 12 - Math.round((27 - x) * 0.15) : 9 + Math.round((x - 27) * 0.2)));
-      for (let y = 10; y <= 58; y++) {
-        const sway = Math.round(1.4 * Math.sin(y / 5));
-        const taper = y > 50 ? Math.round((y - 50) / 3) : 0;
-        front.row(y, 16 + sway + taper, 21 + sway, 'A');
-        front.row(y, 42 + sway, 47 + sway - taper, 'A');
-        if (y % 9 === 3) { front.px(18 + sway, y, 'h'); front.px(18 + sway, y + 1, 'h'); front.px(44 + sway, y + 2, 'h'); }
-        front.px(46 + sway - taper, y, 'a'); front.px(45 + sway - taper, y, 'a');
+      for (let y = 10; y <= 60; y++) {
+        // Each lock is a ribbon whose two edges wave out of step, so it
+        // swells and narrows the way a loose wave does.
+        const swing = Math.round((sway * Math.max(0, y - 14)) / 30);
+        const outer = Math.round(2 * Math.sin((y - 10) / 2.7));
+        const inner = Math.round(1.2 * Math.sin((y - 10) / 2.7 + 1.1));
+        const taper = y > 52 ? Math.round((y - 52) / 2) : 0;
+        const left = [15 + outer + swing + taper, 21 + inner + swing];
+        const right = [42 - inner + swing, 48 - outer + swing - taper];
+        front.row(y, left[0], left[1], 'A');
+        front.row(y, right[0], right[1], 'A');
+        if ((y - 10) % 17 >= 4 && (y - 10) % 17 <= 9) { front.px(left[0] + 2, y, 'h'); front.px(right[0] + 2, y, 'h'); } // light on each wave crest
+        front.px(right[1], y, 'a'); front.px(right[1] - 1, y, 'a');
+        if ((y - 10) % 17 >= 12) front.px(left[1] - 1, y, 'a');                                                        // shadow in each trough
       }
       front.line(27, 3, 27, 9, 'a');                                  // part
       shine(5, 20, 43);
       break;
     }
-    case 'curls': { // short tight curls with a clean edge
-      back.ellipse(32, 13, 14, 10, 'A');
-      for (let x = 20; x <= 43; x += 3) { const top = 13 - Math.round(10 * Math.sqrt(1 - ((x - 31.5) / 14) ** 2)); back.fill(x, top - 1, x + 1, top - 1, 'A'); }
-      fringe((x) => 9 + ((x >> 1) % 2));
-      front.fill(19, 9, 20, 17, 'A'); front.fill(43, 9, 44, 17, 'A');
-      for (let y = 4; y <= 9; y += 2) for (let x = 21 + (y % 4); x <= 42; x += 4) if (front.get(x, y) === 'A') front.px(x, y, 'h');
-      for (let y = 5; y <= 9; y += 2) for (let x = 23 + (y % 4); x <= 42; x += 4) if (front.get(x, y) === 'A') front.px(x, y, 'a');
+    case 'crop': { // cut close to the scalp, sharp squared hairline, sides faded out
+      back.ellipse(32, 14, 13, 10, 'A');
+      back.fill(0, 15, WIDTH - 1, HEIGHT - 1, '.');                    // nothing behind the ears
+      fringe(() => 9);
+      front.fill(20, 9, 22, 12, 'A'); front.fill(41, 9, 43, 12, 'A'); // temples, squared off
+      for (const [x, y] of [[20, 13], [21, 13], [20, 14], [21, 15], [20, 16]]) {  // the fade: hair thinning into skin
+        front.px(x, y, 'h'); front.px(63 - x, y, 'h');
+      }
+      for (let y = 5; y <= 8; y++) for (let x = 22 + ((y * 2) % 5); x <= 41; x += 5) if (front.get(x, y) === 'A') front.px(x, y, 'h');  // short waves
       break;
     }
     case 'braid': { // centre part, tucked behind the ears, one braid over the shoulder
@@ -221,25 +242,28 @@ export function paintHair(style, back, front) {
       front.line(31, 3, 31, 8, 'a');
       shine(5, 21, 42);
       for (let y = 24; y <= 60; y++) {                                  // the braid: plaited segments
-        const centre = 19 + Math.min(3, Math.round((y - 24) * 0.25));
+        const centre = 19 + Math.min(3, Math.round((y - 24) * 0.25)) + Math.round((sway * (y - 24)) / 30);
         const step = (y - 24) % 5, plait = Math.floor((y - 24) / 5);
         const half = step === 0 || step === 4 ? 2 : 3;
         front.row(y, centre - half, centre + half - 1, 'A');
         front.px(plait % 2 ? centre - 2 + step : centre + 1 - step, y, 'h');
         if (step === 4) front.row(y, centre - 1, centre, 'a');
       }
-      front.fill(20, 61, 24, 62, 'X');                                 // tie
-      front.fill(20, 63, 23, 66, 'A'); front.px(21, 67, 'A'); front.px(22, 67, 'A');
+      front.fill(20 + sway, 61, 24 + sway, 62, 'X');                   // tie
+      front.fill(20 + sway, 63, 23 + sway, 66, 'A'); front.px(21 + sway, 67, 'A'); front.px(22 + sway, 67, 'A');
       break;
     }
-    case 'bob': { // chin length, one grey streak at the temple
+    case 'bob': { // chin length and going grey: a streak at the temple, strands through the rest
       back.ellipse(32, 14, 16, 12, 'A');
       back.fill(16, 14, 47, 34, 'A');
       back.fill(17, 35, 46, 36, 'A');
       fringe((x) => 10 + Math.round((x - 20) * 0.08));
       front.shape([[10, 17, 21], [30, 16, 21], [35, 17, 22], [36, 19, 22]], 'A');
       front.shape([[10, 42, 46], [30, 42, 47], [35, 41, 46], [36, 41, 44]], 'A');
-      front.line(25, 4, 22, 11, 'I'); front.line(19, 12, 18, 27, 'I');  // the streak
+      front.line(25, 4, 22, 11, 'I'); front.line(26, 4, 23, 11, 'I'); front.line(19, 12, 18, 27, 'I');  // the streak
+      for (const [x0, y0, x1, y1] of [[30, 3, 28, 9], [35, 3, 37, 9], [39, 4, 42, 10], [20, 14, 20, 24], [44, 13, 45, 23], [46, 18, 46, 30], [17, 20, 17, 31]]) {
+        for (const [x, y] of front.segment(x0, y0, x1, y1)) if (front.get(x, y) === 'A') front.px(x, y, 'I');
+      }
       front.rim('A', 'a', 'right', 1, 1);
       shine(5, 26, 42);
       break;
@@ -311,15 +335,15 @@ export function beanieLayer() {
 }
 
 // Mortarboard seen from just below: a wide flat board over a skull cap.
-export function capLayer() {
+export function capLayer(sway = 0) {
   const cap = layer();
   cap.fill(20, 6, 43, 11, 'G');
   cap.row(12, 21, 42, 'G');
   for (let y = 0; y <= 6; y++) { const half = 23 - Math.abs(y - 3) * 5; cap.row(y, 32 - half, 31 + half, y <= 3 ? 'g' : 'G'); }
   cap.fill(31, 2, 32, 3, 'y');                                          // button
   cap.line(33, 3, 48, 4, 'y');                                          // tassel cord along the board
-  cap.fill(48, 5, 48, 13, 'y');
-  cap.fill(47, 14, 49, 17, 'y'); cap.px(48, 18, 'y');
+  cap.line(48, 5, 48 + sway, 13, 'y');
+  cap.fill(47 + sway, 14, 49 + sway, 17, 'y'); cap.px(48 + sway, 18, 'y');
   return cap;
 }
 

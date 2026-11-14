@@ -3,6 +3,7 @@
 import { characterSprite } from '../sprites/cast.js';
 import { SPRITE_WIDTH, SPRITE_HEIGHT } from '../sprites/humanoid.js';
 import { SPRITE_SCALE, FLOOR_Y } from './characters.js';
+import { idleMotion } from './idle.js';
 
 const STARS = Array.from({ length: 120 }, (_, index) => ({
   x: (index * 97) % 768,
@@ -11,7 +12,8 @@ const STARS = Array.from({ length: 120 }, (_, index) => ({
   size: index % 7 === 0 ? 2 : 1,
 }));
 
-export function drawTitleScreen(ctx, width, height, timeMs, endingsSeen, endingCount) {
+// `idleClock` drives Amara's idle animation; null draws her at rest.
+export function drawTitleScreen(ctx, width, height, timeMs, endingsSeen, endingCount, idleClock = null) {
   const sky = ctx.createLinearGradient(0, 0, 0, height);
   sky.addColorStop(0, '#060616');
   sky.addColorStop(1, '#1b1b40');
@@ -30,11 +32,12 @@ export function drawTitleScreen(ctx, width, height, timeMs, endingsSeen, endingC
   ctx.fillRect(0, FLOOR_Y, width, 3);
 
   ctx.imageSmoothingEnabled = false;
-  const sprite = characterSprite('amara', 'glad', 'right');
+  const motion = idleMotion('amara', 'glad', idleClock);
+  const sprite = characterSprite('amara', 'glad', 'right', motion.look);
   ctx.drawImage(
     sprite,
-    width / 2 - (SPRITE_WIDTH * SPRITE_SCALE) / 2,
-    FLOOR_Y - SPRITE_HEIGHT * SPRITE_SCALE,
+    width / 2 - (SPRITE_WIDTH * SPRITE_SCALE) / 2 + motion.dx * SPRITE_SCALE,
+    FLOOR_Y - SPRITE_HEIGHT * SPRITE_SCALE + motion.dy * SPRITE_SCALE,
     SPRITE_WIDTH * SPRITE_SCALE,
     SPRITE_HEIGHT * SPRITE_SCALE,
   );

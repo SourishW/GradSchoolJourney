@@ -40,6 +40,8 @@ export function paintBody(main, spec, colors) {
   if (!build) throw new Error(`unknown build '${spec.build}'`);
   const style = spec.gown ? 'gown' : spec.topStyle ?? 'tee';
   const arms = spec.arms ?? 'down';
+  const gesture = arms === 'down' ? spec.gesture : null;
+  const sway = spec.sway ?? 0;
   const outlined = (part, keep) => { softOutline(part.cells, colors, { strength: LINE_STRENGTH, keep }); main.stamp(part); };
   const worn = (name) => !spec.gown && (spec.accessories ?? []).includes(name);
 
@@ -62,19 +64,28 @@ export function paintBody(main, spec, colors) {
     outlined(neckArm, rightKeep);
   } else {
     const hold = arms === 'hold';
-    const left = hold ? bentArm([[shoulderX - 2, 41], [shoulderX - 3, 54], [26, 60]], build, style) : hangingArm(build, style, shoulderX);
-    const right = mirrored(left);
-    if (!hold && worn('watch')) { left.fill(shoulderX - build.arm, 64, shoulderX - 1, 65, 'k'); left.px(shoulderX - 3, 64, 'y'); left.px(shoulderX - 3, 65, 'y'); }
-    shadeArm(left, 'left');
+    const hanging = hold ? bentArm([[shoulderX - 2, 41], [shoulderX - 3, 54], [26, 60]], build, style) : hangingArm(build, style, shoulderX);
+    const right = mirrored(hanging);
+    let left = hanging;
+    if (gesture === 'watch') {
+      // Wrist raised in front of the chest, watch face up.
+      left = bentArm([[shoulderX - 2, 41], [shoulderX - 3, 55], [28, 50]], build, style);
+      left.fill(23, 48, 24, 53, 'k'); left.fill(23, 50, 24, 51, 'y');
+    } else if (!hold && worn('watch')) {
+      left.fill(shoulderX - build.arm, 64, shoulderX - 1, 65, 'k'); left.px(shoulderX - 3, 64, 'y'); left.px(shoulderX - 3, 65, 'y');
+    }
     shadeArm(right, 'right');
-    outlined(left, leftKeep);
     outlined(right, rightKeep);
+    if (gesture !== 'glasses') {            // that arm goes in front of the head: see paintInFront
+      shadeArm(left, 'left');
+      outlined(left, leftKeep);
+    }
   }
   paintNeck(main);
   paintCollar(main, style, spec);
   if (worn('backpack')) paintBackpackStraps(build, outlined);
   if (worn('headphones')) paintHeadphones(outlined);
-  if (worn('scarf')) paintScarf(outlined);
+  if (worn('scarf')) paintScarf(outlined, sway);
   if (worn('lanyard')) paintLanyard(main, outlined);
   if (worn('necklace')) paintNecklace(main);
 }
@@ -224,7 +235,7 @@ function torsoLayer(build, style, spec) {
 // The neck sits in front of the torso; the collar then sits in front of the neck.
 function paintNeck(main) {
   main.fill(28, 30, 35, 37, 's');
-  main.fill(28, 30, 35, 33, 'S');   // shadow under the chin
+  main.fill(28, 30, 35, 34, 'S');   // shadow under the chin
   main.fill(34, 34, 35, 37, 'S');
   main.fill(28, 30, 28, 36, 'z'); main.fill(35, 30, 35, 36, 'z');
 }
@@ -338,7 +349,7 @@ function paintHeadphones(outlined) {
   outlined(mirrored(part));
 }
 
-function paintScarf(outlined) {
+function paintScarf(outlined, sway) {
   const part = layer();
   part.fill(25, 31, 38, 37, 'X');
   part.fill(24, 33, 39, 36, 'X');
@@ -346,10 +357,10 @@ function paintScarf(outlined) {
   part.row(31, 26, 37, 'C');
   outlined(part);
   const tail = layer();
-  tail.shape([[37, 35, 39], [52, 36, 40]], 'X');
+  tail.shape([[37, 35, 39], [52, 36 + sway, 40 + sway]], 'X');                     // the loose end swings
   tail.rim('X', 'x', 'right', 1, 0);
-  tail.row(47, 36, 40, 'C');
-  for (let x = 36; x <= 40; x += 2) tail.fill(x, 53, x, 54, 'X');                    // fringe
+  tail.recolor(0, 47, WIDTH - 1, 47, 'Xx', 'C');
+  for (let x = 36 + sway; x <= 40 + sway; x += 2) tail.fill(x, 53, x, 54, 'X');     // fringe
   outlined(tail);
 }
 
@@ -369,13 +380,24 @@ function paintNecklace(main) {
 
 // --- held --------------------------------------------------------------------
 
-// The violin pose: instrument under the chin, bow arm across the chest. Runs
-// after the head and hair so the instrument sits in front of both.
-export function paintViolin(main, spec, colors) {
+// Whatever the pose puts in front of the head and hair.
+export function paintInFront(main, spec, colors) {
   const build = BUILDS[spec.build ?? 'average'];
   const style = spec.gown ? 'gown' : spec.topStyle ?? 'tee';
   const outlined = (part, keep) => { softOutline(part.cells, colors, { strength: LINE_STRENGTH, keep }); main.stamp(part); };
+  const shoulderX = CX - build.shoulder;
+  const outerOnly = (x, y, nx) => y > ARMPIT_Y || nx < x;
+  const arms = spec.arms ?? 'down';
 
+  if (arms === 'down' && spec.gesture === 'glasses') {
+    // Hand to the frame of her glasses, elbow out.
+    const arm = bentArm([[shoulderX - 2, 41], [shoulderX - 4, 52], [20, 24 + (spec.headDrop ?? 0)]], build, style);
+    shadeArm(arm, 'left');
+    outlined(arm, outerOnly);
+  }
+  if (arms !== 'violin') return;
+
+  // The violin pose: instrument under the chin, bow arm across the chest.
   const violin = layer();
   violin.ellipse(38, 38, 6, 5, 'O');                // lower bout, under the chin
   violin.fill(43, 36, 46, 40, 'O');                 // waist
@@ -391,13 +413,14 @@ export function paintViolin(main, spec, colors) {
   outlined(violin);
   main.fill(56, 37, 58, 37, 's'); main.px(57, 36, 's'); // fingers over the neck
 
+  // The bow slides along its own length between the two stroke frames.
+  const [slideX, slideY] = spec.bowStroke ? [2, -6] : [0, 0];
   const bow = layer();
-  bow.line(43, 51, 51, 23, 'd');
-  bow.line(42, 51, 50, 23, 'l');
+  bow.line(43 + slideX, 51 + slideY, 51 + slideX, 23 + slideY, 'd');
+  bow.line(42 + slideX, 51 + slideY, 50 + slideX, 23 + slideY, 'l');
   main.stamp(bow);
 
-  const shoulderX = CX - build.shoulder;
-  const bowArm = bentArm([[shoulderX - 2, 41], [shoulderX - 3, 55], [42, 50]], build, style);
+  const bowArm = bentArm([[shoulderX - 2, 41], [shoulderX - 3, 55 + slideY / 2], [42 + slideX, 50 + slideY]], build, style);
   shadeArm(bowArm, 'left');
-  outlined(bowArm, (x, y, nx) => y > ARMPIT_Y || nx < x);
+  outlined(bowArm, outerOnly);
 }

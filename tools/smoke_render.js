@@ -38,10 +38,10 @@ const audio = { syllable() {}, tick() {}, confirm() {}, chord() {} };
 const ctx = stubContext();
 
 function renderFrame(player, now) {
-  if (player.mode === 'title') return drawTitleScreen(ctx, 384, 216, now, 0, ENDINGS.length);
+  if (player.mode === 'title') return drawTitleScreen(ctx, 384, 216, now, 0, ENDINGS.length, now);
   if (player.mode === 'card') return drawCard(ctx, player, 384, 216);
   BACKGROUNDS[player.scene.bg](ctx, player.resolve(player.scene.bgVariant), now);
-  drawCharacters(ctx, player, 384);
+  drawCharacters(ctx, player, 384, now);
   drawHud(ctx, player);
   if (player.mode === 'ending') return drawEndingScreen(ctx, player, 384, 216);
   drawDialogueBox(ctx, player);

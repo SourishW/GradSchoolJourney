@@ -3,7 +3,8 @@
 //
 //  1. every scene id referenced by `next` exists
 //  2. every speaker, pose, prop and background referenced exists
-//  3. every character x pose x facing rasterizes to a valid grid
+//  3. every character x pose x facing rasterizes to a valid grid, and so
+//     does every frame of every idle animation
 //  4. random walks from the title always reach the ending, and all endings
 //     are reachable
 
@@ -16,6 +17,7 @@ import { PROPS } from '../js/sprites/props.js';
 import { assertGrid } from '../js/sprites/pixel_sprite.js';
 import { BACKGROUNDS } from '../js/backgrounds/index.js';
 import { createStats, applyEffects } from '../js/engine/stats.js';
+import { idleMotion } from '../js/render/idle.js';
 
 const problems = [];
 const note = (message) => problems.push(message);
@@ -59,6 +61,35 @@ for (const [who, member] of Object.entries(CAST)) {
         }
       }
       spriteCount += 1;
+    }
+  }
+}
+// Every distinct frame the idle animations can ask for, sampled over a span
+// longer than any of their cycles. `arms: 'hold'` is checked too because a
+// character can be carrying something while animating.
+const IDLE_SWEEP_MS = 30000, IDLE_STEP_MS = 30;
+let idleFrameCount = 0;
+for (const [who, member] of Object.entries(CAST)) {
+  for (const [poseName, face] of Object.entries(POSES)) {
+    const seen = new Set();
+    for (let time = 0; time < IDLE_SWEEP_MS; time += IDLE_STEP_MS) {
+      const { look, dx, dy } = idleMotion(who, poseName, time, time);
+      if (!Number.isInteger(dx) || !Number.isInteger(dy)) note(`${who}:${poseName}: idle offset is not whole pixels at ${time}ms`);
+      const key = JSON.stringify(look);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      for (const extra of [{}, { arms: 'hold' }]) {
+        try {
+          const sprite = humanoid({ ...member, ...face, facing: 'right', ...look, ...extra });
+          assertGrid(sprite.rows, `${who}:${poseName}:idle`);
+          for (const row of sprite.rows) for (const letter of row) {
+            if (letter !== '.' && !sprite.colors[letter]) note(`${who}:${poseName}: idle frame ${key} has no color for '${letter}'`);
+          }
+        } catch (error) {
+          note(`${who}:${poseName}: idle frame ${key} failed: ${error.message}`);
+        }
+      }
+      idleFrameCount += 1;
     }
   }
 }
@@ -134,7 +165,7 @@ for (const [id, count] of Object.entries(sceneVisits)) {
 // --- report ----------------------------------------------------------------
 
 console.log(`scenes: ${Object.keys(STORY).length}`);
-console.log(`sprites rasterized: ${spriteCount}, props: ${Object.keys(PROPS).length}`);
+console.log(`sprites rasterized: ${spriteCount}, idle frames: ${idleFrameCount}, props: ${Object.keys(PROPS).length}`);
 console.log(`random walks: ${RUNS}, all reached the ending`);
 console.log('ending distribution:', endingCounts);
 console.log(`lessons: ${Object.keys(LESSONS).length}; walks missing a lesson: ${walksMissingLessons}`);

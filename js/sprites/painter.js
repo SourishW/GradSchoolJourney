@@ -70,14 +70,16 @@ export function createLayer(width, height) {
 
   const mirror = () => { for (const cellRow of cells) cellRow.reverse(); };
 
-  const stamp = (layer) => {
-    for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+  // Copies another layer's filled pixels onto this one, shifted by (dx, dy).
+  const stampAt = (layer, dx, dy) => {
+    for (let y = 0; y < layer.height; y++) for (let x = 0; x < layer.width; x++) {
       const letter = layer.cells[y][x];
-      if (letter !== '.') cells[y][x] = letter;
+      if (letter !== '.') px(x + dx, y + dy, letter);
     }
   };
+  const stamp = (layer) => stampAt(layer, 0, 0);
 
-  return { width, height, cells, get, px, fill, row, shape, ellipse, segment, line, rim, recolor, mirror, stamp, rows: () => cells.map((r) => r.join('')) };
+  return { width, height, cells, get, px, fill, row, shape, ellipse, segment, line, rim, recolor, mirror, stamp, stampAt, rows: () => cells.map((r) => r.join('')) };
 }
 
 // Mirrors edge keyframes about the vertical centre line of a `width` grid.

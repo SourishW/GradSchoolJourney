@@ -61,6 +61,9 @@ attachInput(canvas, LOGICAL_WIDTH, LOGICAL_HEIGHT, {
   },
 });
 
+// People who ask their system for less motion get the characters at rest.
+const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+
 let lastTime = performance.now();
 
 function frame(now) {
@@ -73,9 +76,10 @@ function frame(now) {
 
 function render(now) {
   ctx.clearRect(0, 0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+  const idleClock = reducedMotion?.matches ? null : now;
 
   if (player.mode === 'title') {
-    drawTitleScreen(ctx, LOGICAL_WIDTH, LOGICAL_HEIGHT, now, player.endingsSeen().length, ENDINGS.length);
+    drawTitleScreen(ctx, LOGICAL_WIDTH, LOGICAL_HEIGHT, now, player.endingsSeen().length, ENDINGS.length, idleClock);
     return;
   }
   if (player.mode === 'card') {
@@ -89,7 +93,7 @@ function render(now) {
   ctx.scale(BACKGROUND_SCALE, BACKGROUND_SCALE);
   paintBackground(ctx, player.resolve(player.scene.bgVariant), now);
   ctx.restore();
-  drawCharacters(ctx, player, LOGICAL_WIDTH);
+  drawCharacters(ctx, player, LOGICAL_WIDTH, idleClock);
   drawHud(ctx, player);
 
   if (player.mode === 'ending') {
